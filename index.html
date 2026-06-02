@@ -7,6 +7,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyB_p85IKbpyEKLpP6useVk1DFQlKxFX__s",
+  authDomain: "ee-coronel-horta.firebaseapp.com",
+  databaseURL: "https://ee-coronel-horta-default-rtdb.firebaseio.com",
+  projectId: "ee-coronel-horta",
+  storageBucket: "ee-coronel-horta.firebasestorage.app",
+  messagingSenderId: "975575587973",
+  appId: "1:975575587973:web:8987da66f7137f921f1dec",
+  measurementId: "G-GTY7XZ00BQ"
+};
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -441,6 +458,31 @@ const LS = {
   set:(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 
+/* ── FIREBASE SYNC ─────────────────────────────────────── */
+function fbSet(path, data){
+  try{ db.ref(path).set(data); }catch(e){ console.warn('fbSet error',e); }
+}
+function fbSave(){
+  fbSet('professores',   professores);
+  fbSet('planejamentos', planejamentos);
+  fbSet('lancamentos',   lancamentos);
+  fbSet('usuarios',      usuarios);
+}
+function fbListen(){
+  db.ref('professores').on('value',   s=>{ if(s.val()){ professores   = s.val(); LS.set('prof_v2',professores);   if(currentUser) refreshCurrentPage(); }});
+  db.ref('planejamentos').on('value', s=>{ if(s.val()){ planejamentos = s.val(); LS.set('plans_v2',planejamentos); if(currentUser) refreshCurrentPage(); }});
+  db.ref('lancamentos').on('value',   s=>{ if(s.val()){ lancamentos   = s.val(); LS.set('lancs_v2',lancamentos);   if(currentUser) refreshCurrentPage(); }});
+  db.ref('usuarios').on('value',      s=>{ if(s.val()){ usuarios      = s.val(); LS.set('usuarios_v2',usuarios);   }});
+}
+function refreshCurrentPage(){
+  const active = document.querySelector('.nav-tab.active');
+  if(!active) return;
+  const id = active.id.replace('navbtn-','');
+  if(id==='painel') renderPainel();
+  else if(id==='planejamento') renderPlanTable();
+  else if(id==='lancamento') renderLancamentos();
+}
+
 /* ============================================================
    INITIAL DATA
 ============================================================ */
@@ -487,6 +529,7 @@ function save(){
   LS.set('plans_v2', planejamentos);
   LS.set('lancs_v2', lancamentos);
   LS.set('usuarios_v2', usuarios);
+  fbSave();
 }
 
 /* ============================================================
@@ -540,6 +583,8 @@ function doLogin(){
 
 function loginSuccess(user){
   currentUser = user;
+  // Persistir sessão para sobreviver a recarregamentos
+  try{ sessionStorage.setItem('session_user', JSON.stringify({cpf:user.cpf,pin:user.pin})); }catch(e){}
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-shell').style.display='block';
   buildNav();
@@ -555,6 +600,7 @@ function loginSuccess(user){
 
 function doLogout(){
   currentUser=null;
+  try{ sessionStorage.removeItem('session_user'); }catch(e){}
   document.getElementById('app-shell').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   ['p0','p1','p2','p3'].forEach(id=>document.getElementById(id).value='');
@@ -1086,7 +1132,27 @@ function doChangePin(){
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll(".modal-overlay").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
-document.getElementById("ano-atual").textContent=new Date().getFullYear();;
+document.getElementById("ano-atual").textContent=new Date().getFullYear();
+
+// Restaurar sessão se o usuário já estava logado
+(function restoreSession(){
+  try{
+    const saved = sessionStorage.getItem('session_user');
+    if(!saved) return;
+    const {cpf, pin} = JSON.parse(saved);
+    // procurar nas contas admin
+    const adminMatch = ADMIN_ACCOUNTS_MUTABLE.find(a=>a.cpf===cpf&&a.pin===pin);
+    if(adminMatch){ loginSuccess(adminMatch); return; }
+    // procurar nos usuários cadastrados
+    const userMatch = usuarios.find(u=>u.cpf===cpf&&u.pin===pin);
+    if(userMatch){ loginSuccess(userMatch); return; }
+    // sessão inválida (PIN mudou etc), limpar
+    sessionStorage.removeItem('session_user');
+  }catch(e){}
+})();
+
+// Iniciar sincronização em tempo real com Firebase
+fbListen();
 </script>
 
 <!-- MODAL ALTERAR PIN -->
