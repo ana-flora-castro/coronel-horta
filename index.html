@@ -719,6 +719,45 @@ function addProfessor(){
   save();closeModal('modal-add-prof');renderProfessores();
 }
 
+
+/* ============================================================
+   REDEFINIR PIN (admin only)
+============================================================ */
+function abrirResetPin(cpf, nome){
+  document.getElementById('reset-pin-cpf').value = cpf;
+  document.getElementById('reset-pin-nome').textContent = nome;
+  document.getElementById('reset-pin-novo').value = '';
+  document.getElementById('reset-pin-conf').value = '';
+  document.getElementById('reset-pin-msg').style.display = 'none';
+  openModal('modal-reset-pin');
+}
+
+function confirmarResetPin(){
+  const cpf   = document.getElementById('reset-pin-cpf').value;
+  const novo  = document.getElementById('reset-pin-novo').value.replace(/\D/g,'');
+  const conf  = document.getElementById('reset-pin-conf').value.replace(/\D/g,'');
+  const msg   = document.getElementById('reset-pin-msg');
+
+  function showMsg(txt, ok){
+    msg.style.display='block';
+    msg.textContent=txt;
+    msg.style.background = ok ? 'var(--green-light)' : 'var(--red-light)';
+    msg.style.color      = ok ? 'var(--green-text)'  : 'var(--red-text)';
+    msg.style.border     = ok ? '1px solid #a0d0b0'  : '1px solid #f0a0a0';
+  }
+
+  if(novo.length !== 4){ showMsg('O novo PIN deve ter exatamente 4 dígitos.', false); return; }
+  if(novo !== conf)     { showMsg('Os PINs não coincidem.', false); return; }
+
+  const u = usuarios.find(x => x.cpf === cpf);
+  if(!u){ showMsg('Usuário não encontrado.', false); return; }
+
+  u.pin = novo;
+  save();
+  showMsg(`PIN de ${document.getElementById('reset-pin-nome').textContent} redefinido com sucesso!`, true);
+  setTimeout(() => closeModal('modal-reset-pin'), 1800);
+}
+
 /* ============================================================
    VINCULAR CPF (admin only)
 ============================================================ */
@@ -759,7 +798,8 @@ function renderVincular(){
           <div class="cpf-detail">${u.cpf} → ${prof?prof.nome:'Professor não encontrado'}</div>
         </div>
         <span class="badge badge-green"><i class="ti ti-check" aria-hidden="true"></i> Vinculado</span>
-        <button class="btn btn-sm btn-danger" onclick="desvincularUser('${u.cpf}')"><i class="ti ti-unlink"></i></button>
+        <button class="btn btn-sm btn-outline" style="margin-left:4px" onclick="abrirResetPin('${u.cpf}','${u.nome}')"><i class="ti ti-key"></i> PIN</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="desvincularUser('${u.cpf}')"><i class="ti ti-unlink"></i></button>
       </div>`;
     }).join('');
   }
@@ -1085,6 +1125,38 @@ document.getElementById("ano-atual").textContent=new Date().getFullYear();;
     <div style="display:flex;gap:.75rem;justify-content:flex-end">
       <button class="btn btn-outline btn-sm" onclick="closeModal('modal-change-pin')">Cancelar</button>
       <button class="btn btn-primary btn-sm" onclick="doChangePin()"><i class="ti ti-check"></i> Salvar novo PIN</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL REDEFINIR PIN (admin) -->
+<div class="modal-overlay" id="modal-reset-pin">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">
+      Redefinir PIN
+      <button class="close-btn" onclick="closeModal('modal-reset-pin')">×</button>
+    </div>
+    <input type="hidden" id="reset-pin-cpf">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">
+      Definindo novo PIN para: <strong id="reset-pin-nome"></strong>
+    </p>
+    <div id="reset-pin-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem"></div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>Novo PIN (4 dígitos)</label>
+      <input type="password" id="reset-pin-novo" maxlength="4" inputmode="numeric"
+             placeholder="••••" style="letter-spacing:8px;font-size:20px;text-align:center">
+    </div>
+    <div class="form-group" style="margin-bottom:1.5rem">
+      <label>Confirmar novo PIN</label>
+      <input type="password" id="reset-pin-conf" maxlength="4" inputmode="numeric"
+             placeholder="••••" style="letter-spacing:8px;font-size:20px;text-align:center">
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-reset-pin')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmarResetPin()">
+        <i class="ti ti-check"></i> Salvar novo PIN
+      </button>
     </div>
   </div>
 </div>
