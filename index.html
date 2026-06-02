@@ -321,6 +321,99 @@ tr:last-child td{border-bottom:none}
 </div>
 </div>
 
+
+<!-- NOVO ANO LETIVO (admin only) -->
+<div id="page-novoano" class="page">
+<div class="container" style="max-width:720px">
+  <div class="section-title"><i class="ti ti-calendar-plus"></i> Novo Ano Letivo</div>
+  
+  <div style="background:var(--red-light);border:1.5px solid var(--red);border-radius:var(--card-radius);padding:1.5rem;margin-bottom:1.5rem">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:.75rem">
+      <i class="ti ti-alert-triangle" style="font-size:22px;color:var(--red)"></i>
+      <span style="font-weight:600;font-size:15px;color:var(--red-text)">Atenção — Ação irreversível</span>
+    </div>
+    <p style="font-size:13px;color:var(--red-text);line-height:1.7">
+      Esta ação apaga <strong>todos os planejamentos e lançamentos</strong> do ano atual e reinicia o progresso de aulas de todos os professores.<br>
+      <strong>O que é mantido:</strong> professores cadastrados, CPFs vinculados, PINs e usuários.<br>
+      <strong>O que é apagado:</strong> planejamentos, lançamentos e progresso de aulas.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="section-title" style="font-size:13px"><i class="ti ti-check"></i> O que será feito</div>
+    <table style="font-size:13px;width:100%">
+      <tbody>
+        <tr><td style="padding:6px 0;color:var(--green-text)"><i class="ti ti-check" style="color:var(--green)"></i> Mantido</td><td>Professores cadastrados</td></tr>
+        <tr><td style="padding:6px 0;color:var(--green-text)"><i class="ti ti-check" style="color:var(--green)"></i> Mantido</td><td>CPFs vinculados e PINs</td></tr>
+        <tr><td style="padding:6px 0;color:var(--green-text)"><i class="ti ti-check" style="color:var(--green)"></i> Mantido</td><td>Usuários cadastrados</td></tr>
+        <tr><td style="padding:6px 0;color:var(--red-text)"><i class="ti ti-x" style="color:var(--red)"></i> Apagado</td><td>Todos os planejamentos</td></tr>
+        <tr><td style="padding:6px 0;color:var(--red-text)"><i class="ti ti-x" style="color:var(--red)"></i> Apagado</td><td>Todos os lançamentos semanais</td></tr>
+        <tr><td style="padding:6px 0;color:var(--red-text)"><i class="ti ti-x" style="color:var(--red)"></i> Zerado</td><td>Progresso de aulas (ministradas / total)</td></tr>
+        <tr><td style="padding:6px 0;color:var(--red-text)"><i class="ti ti-x" style="color:var(--red)"></i> Zerado</td><td>Status de todos os professores → Em Dia</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <div class="section-title" style="font-size:13px"><i class="ti ti-lock"></i> Confirmação de segurança</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">Para confirmar, digite <strong>NOVO ANO</strong> no campo abaixo e informe seu PIN.</p>
+    <div class="form-row">
+      <div class="form-group-inline">
+        <label>Digite NOVO ANO</label>
+        <input type="text" id="novoano-confirm" placeholder="NOVO ANO" style="text-transform:uppercase">
+      </div>
+      <div class="form-group-inline">
+        <label>Seu PIN</label>
+        <input type="password" id="novoano-pin" maxlength="4" inputmode="numeric" placeholder="••••" style="letter-spacing:8px;font-size:20px;text-align:center">
+      </div>
+    </div>
+    <div id="novoano-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem"></div>
+    <button class="btn btn-sm" style="background:var(--red);color:#fff;margin-top:.5rem" onclick="executarNovoAno()">
+      <i class="ti ti-calendar-plus"></i> Iniciar Novo Ano Letivo
+    </button>
+  </div>
+</div>
+</div>
+
+
+<!-- PRAZOS DE ENTREGA (admin only) -->
+<div id="page-prazos" class="page">
+<div class="container" style="max-width:860px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <div class="section-title" style="margin:0"><i class="ti ti-clock-check"></i> Prazos de Entrega do Planejamento</div>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('prazo-edit-idx').value='';openModal('modal-add-prazo')"><i class="ti ti-plus"></i> Novo Prazo</button>
+  </div>
+
+  <div style="background:var(--blue-light);border:1px solid var(--blue);border-radius:var(--card-radius);padding:1rem 1.5rem;margin-bottom:1.5rem;font-size:13px;color:var(--blue-text)">
+    <i class="ti ti-info-circle" style="font-size:16px"></i>
+    <strong> Como funciona:</strong> defina um prazo para cada bimestre. Quando a data vencer, professores que ainda não entregaram o planejamento daquele bimestre ficam automaticamente em <strong>Atenção</strong> ou <strong>Atraso</strong>.
+  </div>
+
+  <!-- BIMESTRES STATUS -->
+  <div id="prazos-bimestres-status" style="margin-bottom:1.5rem"></div>
+
+  <!-- TABELA DE PRAZOS -->
+  <div class="card" style="padding:0">
+    <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Bimestre</th>
+        <th>Descrição</th>
+        <th>Data Limite</th>
+        <th>Situação</th>
+        <th>Professores em dia</th>
+        <th>Ações</th>
+      </tr></thead>
+      <tbody id="tbody-prazos"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- DETALHE: quem não entregou -->
+  <div id="prazos-detail" style="margin-top:1.5rem"></div>
+</div>
+</div>
+
 <!-- PLANEJAMENTO -->
 <div id="page-planejamento" class="page">
 <div class="container">
@@ -509,6 +602,7 @@ function fbListen(){
   db.ref('planejamentos').on('value', s=>{ if(s.val()){ planejamentos = s.val(); LS.set('plans_v2',planejamentos); if(currentUser) refreshCurrentPage(); }});
   db.ref('lancamentos').on('value',   s=>{ if(s.val()){ lancamentos   = s.val(); LS.set('lancs_v2',lancamentos);   if(currentUser) refreshCurrentPage(); }});
   db.ref('usuarios').on('value',      s=>{ if(s.val()){ usuarios      = s.val(); LS.set('usuarios_v2',usuarios);   }});
+  db.ref('prazos').on('value',        s=>{ if(s.val()){ prazos        = s.val(); LS.set('prazos_v1',prazos); }});
 }
 function refreshCurrentPage(){
   const active = document.querySelector('.nav-tab.active');
@@ -694,6 +788,8 @@ const NAV_ADMIN = [
   {id:'planejamento',icon:'ti-calendar-check',label:'Planejamento'},
   {id:'agenda',icon:'ti-calendar',label:'Agenda'},
   {id:'lancamento',icon:'ti-pencil',label:'Lançamento'},
+  {id:'prazos',icon:'ti-clock-check',label:'Prazos',admin:true},
+  {id:'novoano',icon:'ti-calendar-plus',label:'Novo Ano',admin:true},
 ];
 const NAV_PROF = [
   {id:'planejamento',icon:'ti-calendar-check',label:'Meu Planejamento'},
@@ -724,6 +820,8 @@ function activatePage(id){
   if(id==='planejamento') renderPlanejamento();
   if(id==='agenda') setupAgenda();
   if(id==='lancamento') setupLancamento();
+  if(id==='prazos') renderPrazos();
+  if(id==='novoano') renderNovoAno();
 }
 
 /* ============================================================
@@ -838,6 +936,220 @@ function confirmarResetPin(){
   save();
   showMsg(`PIN de ${document.getElementById('reset-pin-nome').textContent} redefinido com sucesso!`, true);
   setTimeout(() => closeModal('modal-reset-pin'), 1800);
+}
+
+
+
+/* ============================================================
+   PRAZOS DE ENTREGA
+============================================================ */
+let prazos = LS.get('prazos_v1', [
+  {id:1, bimestre:'1º Bimestre', desc:'Entrega do planejamento', data:'2026-03-14', alerta:7},
+  {id:2, bimestre:'2º Bimestre', desc:'Entrega do planejamento', data:'2026-05-16', alerta:7},
+  {id:3, bimestre:'3º Bimestre', desc:'Entrega do planejamento', data:'2026-08-08', alerta:7},
+  {id:4, bimestre:'4º Bimestre', desc:'Entrega do planejamento', data:'2026-10-17', alerta:7},
+]);
+
+function savePrazos(){
+  LS.set('prazos_v1', prazos);
+  try{ db.ref('prazos').set(prazos); }catch(e){}
+}
+
+function prazoStatus(prazo){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const parts = prazo.data.split('-');
+  const limite = new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+  const alerta = new Date(limite); alerta.setDate(alerta.getDate() - (prazo.alerta||7));
+  const diff = Math.ceil((limite - hoje) / (1000*60*60*24));
+  if(hoje > limite)          return {label:'Vencido',       cor:'red',    diff};
+  if(hoje >= alerta)         return {label:`Vence em ${diff}d`, cor:'yellow', diff};
+  return                            {label:'Em aberto',     cor:'green',  diff};
+}
+
+function profEntregouNoBimestre(profId, bimestre){
+  // Professor entregou se tem pelo menos 1 planejamento naquele bimestre
+  const mesesBim = {
+    '1º Bimestre':['Fevereiro','Março'],
+    '2º Bimestre':['Abril','Maio'],
+    '3º Bimestre':['Junho','Julho','Agosto'],
+    '4º Bimestre':['Setembro','Outubro'],
+  };
+  const meses = mesesBim[bimestre]||[];
+  return planejamentos.some(p=> p.profId==profId && meses.includes(p.mes));
+}
+
+function renderPrazos(){
+  if(!isAdmin()) return;
+
+  // Sincronizar prazos do Firebase
+  try{
+    db.ref('prazos').once('value').then(s=>{
+      if(s.val()){ prazos=s.val(); LS.set('prazos_v1',prazos); renderPrazosTable(); }
+      else renderPrazosTable();
+    });
+  }catch(e){ renderPrazosTable(); }
+}
+
+function renderPrazosTable(){
+  const docentes = professores.filter(p=>p.totalAulas>0);
+  const tbody = document.getElementById('tbody-prazos');
+  if(!tbody) return;
+
+  // Cards de status por bimestre no topo
+  const statusDiv = document.getElementById('prazos-bimestres-status');
+  statusDiv.innerHTML = '<div class="grid-4">' + prazos.map(pr=>{
+    const st = prazoStatus(pr);
+    const emDia = docentes.filter(p=>profEntregouNoBimestre(p.id,pr.bimestre)).length;
+    const total = docentes.length;
+    const corClass = st.cor==='green'?'badge-green':st.cor==='yellow'?'badge-yellow':'badge-red';
+    return `<div class="stat" style="border-left:3px solid var(--${st.cor==='green'?'green':st.cor==='yellow'?'yellow':'red'})">
+      <div class="stat-label">${pr.bimestre}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${pr.data.split('-').reverse().join('/')}</div>
+      <span class="badge ${corClass}" style="font-size:11px">${st.label}</span>
+      <div class="stat-sub" style="margin-top:8px">${emDia}/${total} professores entregaram</div>
+    </div>`;
+  }).join('') + '</div>';
+
+  tbody.innerHTML = prazos.map((pr,i)=>{
+    const st = prazoStatus(pr);
+    const docentes2 = professores.filter(p=>p.totalAulas>0);
+    const entregaram = docentes2.filter(p=>profEntregouNoBimestre(p.id,pr.bimestre));
+    const naoEntregaram = docentes2.filter(p=>!profEntregouNoBimestre(p.id,pr.bimestre));
+    const corBadge = st.cor==='green'?'badge-green':st.cor==='yellow'?'badge-yellow':'badge-red';
+    return `<tr>
+      <td><strong>${pr.bimestre}</strong></td>
+      <td style="font-size:12px;color:var(--muted)">${pr.desc||'—'}</td>
+      <td style="font-family:var(--mono);font-size:13px;font-weight:600">${pr.data.split('-').reverse().join('/')}</td>
+      <td><span class="badge ${corBadge}">${st.label}</span></td>
+      <td>
+        <span style="color:var(--green-text);font-weight:600">${entregaram.length}</span>
+        <span style="color:var(--muted)"> / ${docentes2.length}</span>
+        ${naoEntregaram.length>0?`<button class="btn btn-sm btn-outline" style="margin-left:8px;font-size:11px" onclick="toggleDetalhe(${i})"><i class="ti ti-eye"></i> Ver</button>`:''}
+      </td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="editPrazo(${i})" style="margin-right:4px"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deletePrazo(${i})"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleDetalhe(idx){
+  const pr = prazos[idx];
+  const docentes = professores.filter(p=>p.totalAulas>0);
+  const naoEntregaram = docentes.filter(p=>!profEntregouNoBimestre(p.id,pr.bimestre));
+  const div = document.getElementById('prazos-detail');
+  if(div.dataset.open==idx){ div.innerHTML=''; div.dataset.open=''; return; }
+  div.dataset.open = idx;
+  div.innerHTML = `
+    <div class="card">
+      <div class="section-title" style="font-size:13px"><i class="ti ti-alert-circle" style="color:var(--red)"></i> Não entregaram — ${pr.bimestre}</div>
+      ${naoEntregaram.length===0
+        ? '<p style="font-size:13px;color:var(--green-text)">✅ Todos entregaram!</p>'
+        : naoEntregaram.map(p=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-weight:500;font-size:13px">${p.nome}</div>
+              <div style="font-size:11px;color:var(--muted)">${p.disciplina}</div>
+            </div>
+            <span class="alinhamento-tag">Alinhamento</span>
+          </div>`).join('')
+      }
+    </div>`;
+}
+
+function salvarPrazo(){
+  const bimestre = document.getElementById('prazo-bimestre').value;
+  const desc     = document.getElementById('prazo-desc').value.trim();
+  const data     = document.getElementById('prazo-data').value;
+  const alerta   = parseInt(document.getElementById('prazo-alerta').value)||7;
+  const msg      = document.getElementById('prazo-msg');
+  const editIdx  = document.getElementById('prazo-edit-idx').value;
+
+  if(!data){ msg.style.display='block'; msg.style.background='var(--red-light)'; msg.style.color='var(--red-text)'; msg.style.border='1px solid #f0a0a0'; msg.textContent='Informe a data limite.'; return; }
+
+  if(editIdx!==''){
+    prazos[parseInt(editIdx)] = {id:prazos[parseInt(editIdx)].id, bimestre, desc, data, alerta};
+  } else {
+    const newId = prazos.length ? Math.max(...prazos.map(p=>p.id||0))+1 : 1;
+    prazos.push({id:newId, bimestre, desc, data, alerta});
+  }
+  savePrazos();
+  closeModal('modal-add-prazo');
+  renderPrazosTable();
+}
+
+function editPrazo(idx){
+  const pr = prazos[idx];
+  document.getElementById('prazo-edit-idx').value = idx;
+  document.getElementById('prazo-bimestre').value = pr.bimestre;
+  document.getElementById('prazo-desc').value     = pr.desc||'';
+  document.getElementById('prazo-data').value     = pr.data;
+  document.getElementById('prazo-alerta').value   = pr.alerta||7;
+  document.getElementById('prazo-msg').style.display='none';
+  openModal('modal-add-prazo');
+}
+
+function deletePrazo(idx){
+  if(!confirm('Remover este prazo?')) return;
+  prazos.splice(idx,1);
+  savePrazos();
+  renderPrazosTable();
+}
+
+// Ao abrir modal novo prazo, limpar campos
+const _origOpenModal = openModal;
+
+/* ============================================================
+   NOVO ANO LETIVO (admin only)
+============================================================ */
+function renderNovoAno(){
+  // Só admin acessa — segurança extra
+  if(!isAdmin()){ activatePage('painel'); return; }
+  document.getElementById('novoano-confirm').value='';
+  document.getElementById('novoano-pin').value='';
+  document.getElementById('novoano-msg').style.display='none';
+}
+
+function executarNovoAno(){
+  const confirmTxt = document.getElementById('novoano-confirm').value.trim().toUpperCase();
+  const pin        = document.getElementById('novoano-pin').value.trim();
+  const msg        = document.getElementById('novoano-msg');
+
+  function showMsg(txt, ok){
+    msg.style.display='block';
+    msg.textContent=txt;
+    msg.style.background = ok ? 'var(--green-light)' : 'var(--red-light)';
+    msg.style.color      = ok ? 'var(--green-text)'  : 'var(--red-text)';
+    msg.style.border     = ok ? '1px solid #a0d0b0'  : '1px solid #f0a0a0';
+  }
+
+  if(confirmTxt !== 'NOVO ANO'){ showMsg('Digite exatamente: NOVO ANO', false); return; }
+  if(pin.length !== 4)          { showMsg('Informe seu PIN de 4 dígitos.', false); return; }
+  if(pin !== currentUser.pin)   { showMsg('PIN incorreto.', false); return; }
+
+  // Confirmação final
+  if(!confirm('Tem certeza? Esta ação apagará TODOS os planejamentos e lançamentos do ano atual. Não pode ser desfeita.')) return;
+
+  // Executar reset
+  planejamentos = [];
+  lancamentos   = [];
+  professores   = professores.map(p=>({
+    ...p,
+    aulasMinistradas: 0,
+    status: 'green',
+    ultimaEntrega: '-'
+  }));
+
+  save();
+  showMsg(`✅ Novo ano letivo iniciado com sucesso! Todos os planejamentos e lançamentos foram apagados. Professores mantidos.`, true);
+  
+  // Limpar campos
+  document.getElementById('novoano-confirm').value='';
+  document.getElementById('novoano-pin').value='';
+
+  // Atualizar painel após 2s
+  setTimeout(()=>activatePage('painel'), 2500);
 }
 
 /* ============================================================
@@ -1220,11 +1532,18 @@ function doChangePin(){
 function openModal(id){
   document.getElementById(id).classList.add('open');
   if(id==='modal-add-plan'){
-    // Aguarda o DOM atualizar antes de popular o select
     setTimeout(atualizarDisciplinasModal, 50);
   }
-  if(id==='modal-edit-plan'){
-    // já preenchido no editPlan()
+  if(id==='modal-add-prazo'){
+    // Se não veio do editPrazo, limpar campos
+    const editIdx = document.getElementById('prazo-edit-idx').value;
+    if(editIdx===''){
+      document.getElementById('prazo-bimestre').value='1º Bimestre';
+      document.getElementById('prazo-desc').value='';
+      document.getElementById('prazo-data').value='';
+      document.getElementById('prazo-alerta').value='7';
+      document.getElementById('prazo-msg').style.display='none';
+    }
   }
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -1356,6 +1675,43 @@ fbListen();
     <div style="display:flex;gap:.75rem;justify-content:flex-end">
       <button class="btn btn-outline btn-sm" onclick="closeModal('modal-edit-plan')">Cancelar</button>
       <button class="btn btn-primary btn-sm" onclick="saveEditPlan()"><i class="ti ti-check"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL NOVO/EDITAR PRAZO -->
+<div class="modal-overlay" id="modal-add-prazo">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">Definir Prazo de Entrega <button class="close-btn" onclick="closeModal('modal-add-prazo')">×</button></div>
+    <input type="hidden" id="prazo-edit-idx">
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>Bimestre</label>
+      <select id="prazo-bimestre">
+        <option value="1º Bimestre">1º Bimestre</option>
+        <option value="2º Bimestre">2º Bimestre</option>
+        <option value="3º Bimestre">3º Bimestre</option>
+        <option value="4º Bimestre">4º Bimestre</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>Descrição (opcional)</label>
+      <input type="text" id="prazo-desc" placeholder="Ex: Entrega do planejamento do 1º bimestre">
+    </div>
+    <div class="form-row">
+      <div class="form-group-inline">
+        <label>Data Limite de Entrega</label>
+        <input type="date" id="prazo-data">
+      </div>
+      <div class="form-group-inline">
+        <label>Dias de alerta antes do vencimento</label>
+        <input type="number" id="prazo-alerta" value="7" min="1" max="30" placeholder="7">
+      </div>
+    </div>
+    <div id="prazo-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem"></div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-add-prazo')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarPrazo()"><i class="ti ti-check"></i> Salvar Prazo</button>
     </div>
   </div>
 </div>
