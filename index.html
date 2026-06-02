@@ -483,7 +483,7 @@ tr:last-child td{border-bottom:none}
     <div>
       <div class="section-title" style="font-size:13px"><i class="ti ti-history"></i> Histórico</div>
       <div class="card" style="padding:0"><div class="table-wrap">
-        <table><thead><tr><th>Data</th><th>Professor</th><th>Turma</th><th>Disciplina</th><th>Aula</th><th>Material</th></tr></thead>
+        <table><thead><tr><th>Data</th><th>Professor</th><th>Turma</th><th>Disciplina</th><th>Aula</th><th>Material</th><th></th></tr></thead>
         <tbody id="tbody-lancamentos"></tbody></table>
       </div></div>
     </div>
@@ -1473,18 +1473,87 @@ function renderLancamentos(){
   if(!tbody) return;
   let items=lancamentos;
   if(!isAdmin()){const pid=myProfId();if(pid) items=items.filter(l=>l.profId===pid);}
-  if(!items.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Nenhum lançamento ainda</td></tr>';return;}
-  tbody.innerHTML=items.slice(0,30).map(l=>{
+  if(!items.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">Nenhum lançamento ainda</td></tr>';return;}
+  tbody.innerHTML=items.slice(0,50).map(l=>{
+    const gi=lancamentos.indexOf(l);
     const p=professores.find(x=>x.id===l.profId);
+    const dataParts=l.data.split('-');
+    const dataFmt=dataParts.length===3?`${dataParts[2]}/${dataParts[1]}/${dataParts[0]}`:new Date(l.data).toLocaleDateString('pt-BR');
     return `<tr>
-      <td style="font-size:12px;font-family:var(--mono)">${new Date(l.data).toLocaleDateString('pt-BR')}</td>
+      <td style="font-size:12px;font-family:var(--mono)">${dataFmt}</td>
       <td style="font-size:12px">${p?p.nome.split(' ')[0]+' '+p.nome.split(' ').slice(-1)[0]:'—'}</td>
       <td style="font-size:12px">${l.turma}</td>
       <td style="font-size:12px">${l.disciplina||'—'}</td>
       <td><span class="aula-chip registered">${l.aulaNum}/${l.aulaTotal}</span></td>
       <td><span class="mat-tag">${l.material}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-outline" onclick="editLancamento(${gi})" style="margin-right:4px" title="Editar"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deleteLancamento(${gi})" title="Excluir"><i class="ti ti-trash"></i></button>
+      </td>
     </tr>`;
   }).join('');
+}
+
+
+/* ── EDITAR / EXCLUIR LANÇAMENTO ────────────────────────── */
+function editLancamento(idx){
+  const l = lancamentos[idx];
+  if(!l) return;
+  document.getElementById('el-idx').value   = idx;
+  document.getElementById('el-data').value  = l.data;
+  document.getElementById('el-turma').value = l.turma;
+  document.getElementById('el-aula-num').value   = l.aulaNum;
+  document.getElementById('el-aula-total').value = l.aulaTotal;
+  document.getElementById('el-mat').value   = l.material;
+  document.getElementById('el-obs').value   = l.obs||'';
+  // Popular disciplinas
+  const profId = l.profId;
+  setTimeout(()=>buildDisciplinaSelect('el-disciplina', profId, l.disciplina||''), 50);
+  document.getElementById('el-msg').style.display='none';
+  openModal('modal-edit-lanc');
+}
+
+function salvarEdicaoLancamento(){
+  const idx   = parseInt(document.getElementById('el-idx').value);
+  const data  = document.getElementById('el-data').value;
+  const turma = document.getElementById('el-turma').value;
+  const aulaNum   = parseInt(document.getElementById('el-aula-num').value);
+  const aulaTotal = parseInt(document.getElementById('el-aula-total').value);
+  const material  = document.getElementById('el-mat').value;
+  const disciplina= document.getElementById('el-disciplina').value;
+  const obs       = document.getElementById('el-obs').value;
+  const msg       = document.getElementById('el-msg');
+
+  if(!data||!aulaNum||!aulaTotal){
+    msg.style.display='block';msg.style.background='var(--red-light)';msg.style.color='var(--red-text)';msg.style.border='1px solid #f0a0a0';
+    msg.textContent='Preencha data, número da aula e total.'; return;
+  }
+
+  lancamentos[idx] = {...lancamentos[idx], data, turma, aulaNum, aulaTotal, material, disciplina, obs};
+
+  // Recalcular status do professor com base no lançamento mais recente
+  const profId = lancamentos[idx].profId;
+  const prof   = professores.find(p=>p.id===profId);
+  if(prof){
+    const maisRecente = lancamentos.filter(l=>l.profId===profId).sort((a,b)=>b.ts-a.ts)[0];
+    if(maisRecente){
+      prof.aulasMinistradas = maisRecente.aulaNum;
+      prof.ultimaEntrega    = new Date(maisRecente.data).toLocaleDateString('pt-BR');
+      const esperado = Math.round(prof.totalAulas*0.6), diff = esperado - maisRecente.aulaNum;
+      prof.status = diff<=0?'green':diff<=3?'yellow':'red';
+    }
+  }
+
+  save();
+  closeModal('modal-edit-lanc');
+  renderLancamentos();
+}
+
+function deleteLancamento(idx){
+  if(!confirm('Excluir este lançamento? Esta ação não pode ser desfeita.')) return;
+  lancamentos.splice(idx,1);
+  save();
+  renderLancamentos();
 }
 
 /* ============================================================
@@ -1712,6 +1781,51 @@ fbListen();
     <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem">
       <button class="btn btn-outline btn-sm" onclick="closeModal('modal-add-prazo')">Cancelar</button>
       <button class="btn btn-primary btn-sm" onclick="salvarPrazo()"><i class="ti ti-check"></i> Salvar Prazo</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL EDITAR LANÇAMENTO -->
+<div class="modal-overlay" id="modal-edit-lanc">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">Editar Lançamento <button class="close-btn" onclick="closeModal('modal-edit-lanc')">×</button></div>
+    <input type="hidden" id="el-idx">
+    <div class="form-row">
+      <div class="form-group-inline"><label>Data</label><input type="date" id="el-data"></div>
+      <div class="form-group-inline"><label>Turma</label>
+        <select id="el-turma">
+          <option>6º ANO A</option><option>7º ANO A</option><option>8º ANO A</option>
+          <option>9º ANO A</option><option>1ª SÉRIE A</option><option>2ª SÉRIE A</option><option>3ª SÉRIE A</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>Disciplina</label>
+      <select id="el-disciplina"><option value="">— selecione —</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>Aula Ministrada Nº</label><input type="number" id="el-aula-num" min="1" max="99"></div>
+      <div class="form-group-inline"><label>Total Previsto</label><input type="number" id="el-aula-total" min="1" max="99"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>Material</label>
+      <select id="el-mat">
+        <option value="MD">MD — Material Digital</option>
+        <option value="MI">MI — Material Impresso</option>
+        <option value="EX">EX — Lista de Exercícios</option>
+        <option value="AV/SM">AV/SM — Avaliação / Simulado</option>
+        <option value="SB">SB — Sondagem</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:1.25rem">
+      <label>Observação (opcional)</label>
+      <textarea id="el-obs" rows="2" placeholder="Ex: turma adiantada..."></textarea>
+    </div>
+    <div id="el-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem"></div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-edit-lanc')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarEdicaoLancamento()"><i class="ti ti-check"></i> Salvar correção</button>
     </div>
   </div>
 </div>
