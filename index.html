@@ -390,7 +390,7 @@ tr:last-child td{border-bottom:none}
     <div>
       <div class="section-title" style="font-size:13px"><i class="ti ti-history"></i> Histórico</div>
       <div class="card" style="padding:0"><div class="table-wrap">
-        <table><thead><tr><th>Data</th><th>Professor</th><th>Turma</th><th>Aula</th><th>Material</th></tr></thead>
+        <table><thead><tr><th>Data</th><th>Professor</th><th>Turma</th><th>Disciplina</th><th>Aula</th><th>Material</th></tr></thead>
         <tbody id="tbody-lancamentos"></tbody></table>
       </div></div>
     </div>
@@ -441,7 +441,10 @@ tr:last-child td{border-bottom:none}
       <div class="form-group-inline"><label>Aula Nº</label><input type="number" id="pl-aula" placeholder="14"></div>
       <div class="form-group-inline"><label>Material</label><select id="pl-mat"><option value="MD">MD — Material Digital</option><option value="MI">MI — Material Impresso</option><option value="EX">EX — Lista de Exercícios</option><option value="AV/SM">AV/SM — Avaliação / Simulado</option><option value="SB">SB — Sondagem</option></select></div>
     </div>
-    <div class="form-group" style="margin-bottom:1.5rem"><label>Observação</label><input id="pl-obs" placeholder="Ex: Revisão Prova Paulista"></div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>Disciplina</label><select id="pl-disciplina"><option value="">— selecione —</option></select></div>
+      <div class="form-group-inline"><label>Observação</label><input id="pl-obs" placeholder="Ex: Revisão Prova Paulista"></div>
+    </div>
     <div style="display:flex;gap:.75rem;justify-content:flex-end">
       <button class="btn btn-outline btn-sm" onclick="closeModal('modal-add-plan')">Cancelar</button>
       <button class="btn btn-primary btn-sm" onclick="addPlanejamento()"><i class="ti ti-check"></i> Salvar</button>
@@ -458,6 +461,25 @@ const LS = {
   set:(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 
+
+/* ── DISCIPLINAS DO PROFESSOR ───────────────────────────── */
+function getDisciplinas(profId){
+  const p = professores.find(x=>x.id==profId);
+  if(!p||!p.disciplina) return [];
+  // Separa por "/" ou "," e limpa espaços
+  return p.disciplina.split(/[\/,]/).map(d=>d.trim()).filter(Boolean);
+}
+
+function buildDisciplinaSelect(elId, profId, valorAtual){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const discs = getDisciplinas(profId);
+  if(discs.length===0){
+    el.outerHTML = `<input type="text" id="${elId}" placeholder="Digite a disciplina" value="${valorAtual||''}">`;
+    return;
+  }
+  el.innerHTML = discs.map(d=>`<option value="${d}" ${d===(valorAtual||discs[0])?'selected':''}>${d}</option>`).join('');
+}
 /* ── FIREBASE SYNC ─────────────────────────────────────── */
 function fbSet(path, data){
   try{ db.ref(path).set(data); }catch(e){ console.warn('fbSet error',e); }
@@ -469,6 +491,20 @@ function fbSave(){
   fbSet('usuarios',      usuarios);
 }
 function fbListen(){
+  // Carrega dados imediatamente ao iniciar
+  Promise.all([
+    db.ref('professores').once('value'),
+    db.ref('planejamentos').once('value'),
+    db.ref('lancamentos').once('value'),
+    db.ref('usuarios').once('value'),
+  ]).then(([ps,pls,ls,us])=>{
+    if(ps.val())  { professores   = ps.val();  LS.set('prof_v2',professores); }
+    if(pls.val()) { planejamentos = pls.val(); LS.set('plans_v2',planejamentos); }
+    if(ls.val())  { lancamentos   = ls.val();  LS.set('lancs_v2',lancamentos); }
+    if(us.val())  { usuarios      = us.val();  LS.set('usuarios_v2',usuarios); }
+    if(currentUser) refreshCurrentPage();
+  });
+  // Continua ouvindo mudanças em tempo real
   db.ref('professores').on('value',   s=>{ if(s.val()){ professores   = s.val(); LS.set('prof_v2',professores);   if(currentUser) refreshCurrentPage(); }});
   db.ref('planejamentos').on('value', s=>{ if(s.val()){ planejamentos = s.val(); LS.set('plans_v2',planejamentos); if(currentUser) refreshCurrentPage(); }});
   db.ref('lancamentos').on('value',   s=>{ if(s.val()){ lancamentos   = s.val(); LS.set('lancs_v2',lancamentos);   if(currentUser) refreshCurrentPage(); }});
@@ -877,7 +913,7 @@ function renderPlanejamento(){
       <select id="filter-mes-plan" onchange="renderPlanTable()"><option value="">Todos os meses</option><option>Abril</option><option>Maio</option><option>Junho</option><option>Julho</option></select>
       <select id="filter-turma-plan" onchange="renderPlanTable()"><option value="">Todas as turmas</option>${['6º ANO A','7º ANO A','8º ANO A','9º ANO A','1ª SÉRIE A','2ª SÉRIE A','3ª SÉRIE A'].map(t=>`<option>${t}</option>`).join('')}</select>`;
     // modal prof select
-    document.getElementById('pl-prof-group').innerHTML=`<label>Professor</label><select id="pl-prof">${professores.filter(p=>p.totalAulas>0).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select>`;
+    document.getElementById('pl-prof-group').innerHTML=`<label>Professor</label><select id="pl-prof" onchange="buildDisciplinaSelect('pl-disciplina',parseInt(this.value),'')">${professores.filter(p=>p.totalAulas>0).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select>`;
   } else {
     const pid = myProfId();
     const prof = professores.find(p=>p.id===pid);
@@ -913,17 +949,27 @@ function renderPlanTable(){
     <div class="card" style="margin-bottom:1rem;padding:0">
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;background:#fafaf8;border-radius:var(--card-radius) var(--card-radius) 0 0">${key}</div>
       <div class="table-wrap"><table>
-        <thead><tr><th>Data</th><th>Turma</th><th>Aula Nº</th><th>Material</th><th>Obs.</th><th></th></tr></thead>
-        <tbody>${rows.map((r,i)=>`<tr>
+        <thead><tr><th>Data</th><th>Turma</th><th>Aula Nº</th><th>Disciplina</th><th>Material</th><th>Obs.</th><th></th></tr></thead>
+        <tbody>${rows.map((r)=>{const gi=planejamentos.indexOf(r);return`<tr>
           <td style="font-family:var(--mono);font-size:12px">${r.data}</td>
           <td style="font-size:12px">${r.turma}</td>
           <td><span class="aula-chip">Aula ${r.aula}</span></td>
+          <td style="font-size:12px">${r.disciplina||'—'}</td>
           <td><span class="mat-tag">${r.material}</span></td>
           <td style="font-size:12px;color:var(--muted)">${r.obs||'—'}</td>
-          <td><button class="btn btn-sm btn-danger" onclick="deletePlan(${planejamentos.indexOf(r)})"><i class="ti ti-trash"></i></button></td>
-        </tr>`).join('')}</tbody>
+          <td style="white-space:nowrap">
+            <button class="btn btn-sm btn-outline" onclick="editPlan(${gi})" style="margin-right:4px"><i class="ti ti-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deletePlan(${gi})"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>`}).join('')}</tbody>
       </table></div>
     </div>`).join('');
+}
+
+function atualizarDisciplinasModal(){
+  const profIdRaw = document.getElementById('pl-prof')?document.getElementById('pl-prof').value:'';
+  const pid = profIdRaw ? parseInt(profIdRaw) : myProfId();
+  if(pid) buildDisciplinaSelect('pl-disciplina', pid, '');
 }
 
 function addPlanejamento(){
@@ -934,11 +980,41 @@ function addPlanejamento(){
   const aula   = document.getElementById('pl-aula').value;
   const material=document.getElementById('pl-mat').value;
   const obs    = document.getElementById('pl-obs').value;
+  const disciplina = document.getElementById('pl-disciplina').value.trim();
   if(!profIdRaw||!data||!aula){alert('Preencha professor, data e aula.');return;}
-  planejamentos.push({profId:parseInt(profIdRaw),mes,turma,data,aula:parseInt(aula),material,obs});
+  planejamentos.push({profId:parseInt(profIdRaw),mes,turma,data,aula:parseInt(aula),material,obs,disciplina});
   save();closeModal('modal-add-plan');renderPlanTable();
 }
 
+
+/* ── EDITAR PLANEJAMENTO ────────────────────────────────── */
+function editPlan(idx){
+  const r = planejamentos[idx];
+  if(!r) return;
+  document.getElementById('edit-plan-idx').value = idx;
+  document.getElementById('edit-pl-data').value = r.data;
+  document.getElementById('edit-pl-aula').value = r.aula;
+  document.getElementById('edit-pl-obs').value = r.obs||'';
+  document.getElementById('edit-pl-turma').value = r.turma;
+  document.getElementById('edit-pl-mat').value = r.material;
+  const mesEl = document.getElementById('edit-pl-mes');
+  if(mesEl) mesEl.value = r.mes;
+  // Popular disciplinas do professor dono deste planejamento
+  setTimeout(()=>buildDisciplinaSelect('edit-pl-disciplina', r.profId, r.disciplina||''), 50);
+  document.getElementById('modal-edit-plan').classList.add('open');
+}
+function saveEditPlan(){
+  const idx = parseInt(document.getElementById('edit-plan-idx').value);
+  if(isNaN(idx)||!planejamentos[idx]) return;
+  planejamentos[idx].data        = document.getElementById('edit-pl-data').value;
+  planejamentos[idx].aula        = parseInt(document.getElementById('edit-pl-aula').value);
+  planejamentos[idx].disciplina  = document.getElementById('edit-pl-disciplina').value.trim();
+  planejamentos[idx].obs         = document.getElementById('edit-pl-obs').value;
+  planejamentos[idx].turma       = document.getElementById('edit-pl-turma').value;
+  planejamentos[idx].material    = document.getElementById('edit-pl-mat').value;
+  planejamentos[idx].mes         = document.getElementById('edit-pl-mes').value;
+  save(); closeModal('modal-edit-plan'); renderPlanTable();
+}
 function deletePlan(idx){if(confirm('Remover este planejamento?')){planejamentos.splice(idx,1);save();renderPlanTable();}}
 
 /* ============================================================
@@ -1005,7 +1081,12 @@ function renderAgendaForProf(profId){
   DIAS_FULL.forEach((dia,i)=>{
     const short=DIAS_SHORT[i];
     const aulas=horario[short]||[];
-    const plansDia=plans.filter(p=>{const d=new Date(p.data);return d.getDay()-1===i;});
+    const plansDia=plans.filter(p=>{
+      // Parse manual para evitar problema de fuso horário (UTC vs local)
+      const parts=p.data.split('-');
+      const d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+      return d.getDay()-1===i; // 0=dom,1=seg,...6=sab → seg=1-1=0
+    });
     const multDay=prof.mult?prof.mult.split(' ')[0]:'';
     const ef1Day=prof.ef1&&prof.ef1!=='-'?prof.ef1.split(' ')[0]:'';
     const ef2Day=prof.ef2&&prof.ef2!=='-'?prof.ef2.split(' ')[0]:'';
@@ -1033,13 +1114,18 @@ function setupLancamento(){
   const pg=document.getElementById('lanc-prof-group');
   if(isAdmin()){
     hdr.innerHTML='';
-    pg.innerHTML=`<label>Professor</label><select id="lanc-prof">${professores.filter(p=>p.totalAulas>0).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select>`;
+    pg.innerHTML=`<label>Professor</label><select id="lanc-prof" onchange="buildDisciplinaSelect('lanc-disciplina',parseInt(this.value),'')">${professores.filter(p=>p.totalAulas>0).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select>`;
+    setTimeout(()=>{
+      const firstProf = professores.find(p=>p.totalAulas>0);
+      if(firstProf) buildDisciplinaSelect('lanc-disciplina', firstProf.id, '');
+    }, 80);
   } else {
     const pid=myProfId();
     const prof=professores.find(p=>p.id===pid);
     if(!pid){hdr.innerHTML='<div class="empty"><i class="ti ti-alert-circle"></i>Acesso não vinculado ainda.</div>';pg.innerHTML='';renderLancamentos();return;}
     hdr.innerHTML=`<div class="my-header" style="margin-bottom:1.5rem"><h2>${prof?prof.nome:'Professor'}</h2><p>${prof?prof.disciplina:''}</p></div>`;
     pg.innerHTML=`<input type="hidden" id="lanc-prof" value="${pid}"><label>Professor</label><input readonly value="${prof?prof.nome:''}">`;
+    setTimeout(()=>buildDisciplinaSelect('lanc-disciplina', pid, ''), 80);
   }
   const dateEl=document.getElementById('lanc-data');
   if(!dateEl.value) dateEl.value=new Date().toISOString().split('T')[0];
@@ -1054,8 +1140,9 @@ function registrarLancamento(){
   const aulaTotal=parseInt(document.getElementById('lanc-aula-total').value);
   const material=document.getElementById('lanc-material').value;
   const obs=document.getElementById('lanc-obs').value;
+  const disciplina=document.getElementById('lanc-disciplina')?document.getElementById('lanc-disciplina').value.trim():'';
   if(!profId||!data||!aulaNum||!aulaTotal){alert('Preencha todos os campos obrigatórios.');return;}
-  lancamentos.unshift({profId:parseInt(profId),data,turma,aulaNum,aulaTotal,material,obs,ts:Date.now()});
+  lancamentos.unshift({profId:parseInt(profId),data,turma,aulaNum,aulaTotal,material,obs,disciplina,ts:Date.now()});
   const prof=professores.find(p=>p.id==profId);
   if(prof){
     prof.aulasMinistradas=Math.max(prof.aulasMinistradas,aulaNum);
@@ -1081,6 +1168,7 @@ function renderLancamentos(){
       <td style="font-size:12px;font-family:var(--mono)">${new Date(l.data).toLocaleDateString('pt-BR')}</td>
       <td style="font-size:12px">${p?p.nome.split(' ')[0]+' '+p.nome.split(' ').slice(-1)[0]:'—'}</td>
       <td style="font-size:12px">${l.turma}</td>
+      <td style="font-size:12px">${l.disciplina||'—'}</td>
       <td><span class="aula-chip registered">${l.aulaNum}/${l.aulaTotal}</span></td>
       <td><span class="mat-tag">${l.material}</span></td>
     </tr>`;
@@ -1129,7 +1217,16 @@ function doChangePin(){
   setTimeout(()=>closeModal('modal-change-pin'),1500);
 }
 
-function openModal(id){document.getElementById(id).classList.add('open');}
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-add-plan'){
+    // Aguarda o DOM atualizar antes de popular o select
+    setTimeout(atualizarDisciplinasModal, 50);
+  }
+  if(id==='modal-edit-plan'){
+    // já preenchido no editPlan()
+  }
+}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll(".modal-overlay").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
 document.getElementById("ano-atual").textContent=new Date().getFullYear();
@@ -1223,6 +1320,42 @@ fbListen();
       <button class="btn btn-primary btn-sm" onclick="confirmarResetPin()">
         <i class="ti ti-check"></i> Salvar novo PIN
       </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL EDITAR PLANEJAMENTO -->
+<div class="modal-overlay" id="modal-edit-plan">
+  <div class="modal">
+    <div class="modal-title">Editar Planejamento <button class="close-btn" onclick="closeModal('modal-edit-plan')">×</button></div>
+    <input type="hidden" id="edit-plan-idx">
+    <div class="form-row">
+      <div class="form-group-inline"><label>Mês</label><select id="edit-pl-mes"><option>Abril</option><option>Maio</option><option>Junho</option><option>Julho</option></select></div>
+      <div class="form-group-inline"><label>Data</label><input type="date" id="edit-pl-data"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>Turma</label>
+        <select id="edit-pl-turma"><option>6º ANO A</option><option>7º ANO A</option><option>8º ANO A</option><option>9º ANO A</option><option>1ª SÉRIE A</option><option>2ª SÉRIE A</option><option>3ª SÉRIE A</option></select>
+      </div>
+      <div class="form-group-inline"><label>Aula Nº</label><input type="number" id="edit-pl-aula"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>Disciplina</label><select id="edit-pl-disciplina"><option value="">— selecione —</option></select></div>
+      <div class="form-group-inline"><label>Material</label>
+        <select id="edit-pl-mat">
+          <option value="MD">MD — Material Digital</option>
+          <option value="MI">MI — Material Impresso</option>
+          <option value="EX">EX — Lista de Exercícios</option>
+          <option value="AV/SM">AV/SM — Avaliação / Simulado</option>
+          <option value="SB">SB — Sondagem</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:1.5rem"><label>Observação</label><input id="edit-pl-obs" placeholder="Ex: Revisão Prova Paulista"></div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-edit-plan')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEditPlan()"><i class="ti ti-check"></i> Salvar</button>
     </div>
   </div>
 </div>
