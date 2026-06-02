@@ -303,7 +303,10 @@ tr:last-child td{border-bottom:none}
 <div class="container">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
     <div class="section-title" style="margin:0"><i class="ti ti-users"></i> Equipe Docente</div>
-    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-prof')"><i class="ti ti-plus"></i> Novo Professor</button>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-outline btn-sm" onclick="restaurarProfessores()" title="Restaurar dados originais"><i class="ti ti-refresh"></i> Restaurar</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-prof')"><i class="ti ti-plus"></i> Novo Professor</button>
+    </div>
   </div>
   <div class="card" style="padding:0"><div class="table-wrap">
     <table><thead><tr><th>Nome</th><th>Disciplina</th><th>Turmas</th><th>Formações</th><th>Status</th><th>Ações</th></tr></thead>
@@ -657,11 +660,8 @@ function buildDisciplinaSelect(elId, profId, valorAtual){
 }
 /* ── FIREBASE SYNC ─────────────────────────────────────── */
 /* Firebase salva arrays como objetos {0:{},1:{}} — converter de volta para array */
-function toArray(val){
-  if(!val) return [];
-  if(Array.isArray(val)) return val.filter(x=>x!=null);
-  if(typeof val==='object') return Object.values(val).filter(x=>x!=null);
-  return [];
+function toArray(val, fallback){
+  return ensureArray(val, fallback||[]);
 }
 
 function fbSet(path, data){
@@ -681,18 +681,42 @@ function fbListen(){
     db.ref('lancamentos').once('value'),
     db.ref('usuarios').once('value'),
   ]).then(([ps,pls,ls,us])=>{
-    if(ps.val())  { professores   = toArray(ps.val());  LS.set('prof_v2',professores); }
-    if(pls.val()) { planejamentos = toArray(pls.val()); LS.set('plans_v2',planejamentos); }
-    if(ls.val())  { lancamentos   = toArray(ls.val());  LS.set('lancs_v2',lancamentos); }
-    if(us.val())  { usuarios      = toArray(us.val());  LS.set('usuarios_v2',usuarios); }
+    const fbProfs = toArray(ps.val());
+    const fbPlans = toArray(pls.val());
+    const fbLancs = toArray(ls.val());
+    const fbUsers = toArray(us.val());
+
+    // Só substituir se o Firebase trouxer dados válidos
+    if(fbProfs.length > 0)  { professores   = fbProfs; LS.set('prof_v2',professores); }
+    else if(!professores || professores.length===0) { professores = JSON.parse(JSON.stringify(PROF_SEED)); fbSet('professores', professores); }
+
+    if(fbPlans.length > 0)  { planejamentos = fbPlans; LS.set('plans_v2',planejamentos); }
+    if(fbLancs.length > 0)  { lancamentos   = fbLancs; LS.set('lancs_v2',lancamentos); }
+    if(fbUsers.length > 0)  { usuarios      = fbUsers; LS.set('usuarios_v2',usuarios); }
+
     if(currentUser) refreshCurrentPage();
   });
   // Continua ouvindo mudanças em tempo real
-  db.ref('professores').on('value',   s=>{ if(s.val()){ professores   = toArray(s.val()); LS.set('prof_v2',professores);   if(currentUser) refreshCurrentPage(); }});
-  db.ref('planejamentos').on('value', s=>{ if(s.val()){ planejamentos = toArray(s.val()); LS.set('plans_v2',planejamentos); if(currentUser) refreshCurrentPage(); }});
-  db.ref('lancamentos').on('value',   s=>{ if(s.val()){ lancamentos   = toArray(s.val()); LS.set('lancs_v2',lancamentos);   if(currentUser) refreshCurrentPage(); }});
-  db.ref('usuarios').on('value',      s=>{ if(s.val()){ usuarios      = toArray(s.val()); LS.set('usuarios_v2',usuarios);   }});
-  db.ref('prazos').on('value',        s=>{ if(s.val()){ prazos        = toArray(s.val()); LS.set('prazos_v1',prazos); }});
+  db.ref('professores').on('value',   s=>{
+    const v=toArray(s.val());
+    if(v.length>0){ professores=v; LS.set('prof_v2',professores); if(currentUser) refreshCurrentPage(); }
+  });
+  db.ref('planejamentos').on('value', s=>{
+    const v=toArray(s.val());
+    if(v.length>0){ planejamentos=v; LS.set('plans_v2',planejamentos); if(currentUser) refreshCurrentPage(); }
+  });
+  db.ref('lancamentos').on('value',   s=>{
+    const v=toArray(s.val());
+    if(v.length>0){ lancamentos=v; LS.set('lancs_v2',lancamentos); if(currentUser) refreshCurrentPage(); }
+  });
+  db.ref('usuarios').on('value',      s=>{
+    const v=toArray(s.val());
+    if(v.length>0){ usuarios=v; LS.set('usuarios_v2',usuarios); }
+  });
+  db.ref('prazos').on('value',        s=>{
+    const v=toArray(s.val());
+    if(v.length>0){ prazos=v; LS.set('prazos_v1',prazos); }
+  });
 }
 function refreshCurrentPage(){
   const active = document.querySelector('.nav-tab.active');
@@ -738,11 +762,22 @@ const ADMIN_ACCOUNTS = ADMIN_ACCOUNTS_MUTABLE;
 /* ============================================================
    STATE
 ============================================================ */
-let professores   = LS.get('prof_v2', PROF_SEED);
-let planejamentos = LS.get('plans_v2', []);
-let lancamentos   = LS.get('lancs_v2', []);
-let usuarios      = LS.get('usuarios_v2', []); // {cpf, pin, nome, role:'prof', profId:null|id}
+/* Garante que o dado lido (localStorage ou Firebase) seja sempre um array válido */
+function ensureArray(val, fallback){
+  if(!val) return fallback||[];
+  if(Array.isArray(val)) return val.filter(x=>x!=null);
+  if(typeof val==='object') return Object.values(val).filter(x=>x!=null);
+  return fallback||[];
+}
+
+let professores   = ensureArray(LS.get('prof_v2', null), PROF_SEED);
+let planejamentos = ensureArray(LS.get('plans_v2', null), []);
+let lancamentos   = ensureArray(LS.get('lancs_v2', null), []);
+let usuarios      = ensureArray(LS.get('usuarios_v2', null), []);
 let currentUser   = null;
+
+// Se professores estiver vazio, restaurar seed
+if(!professores || professores.length === 0) professores = JSON.parse(JSON.stringify(PROF_SEED));
 
 function save(){
   LS.set('prof_v2', professores);
@@ -750,6 +785,16 @@ function save(){
   LS.set('lancs_v2', lancamentos);
   LS.set('usuarios_v2', usuarios);
   fbSave();
+}
+
+function restaurarProfessores(){
+  if(confirm('Restaurar lista de professores para os dados originais? Isso não apaga planejamentos ou lançamentos.')){
+    professores = JSON.parse(JSON.stringify(PROF_SEED));
+    save();
+    renderProfessores();
+    renderPainel();
+    alert('Professores restaurados!');
+  }
 }
 
 /* ============================================================
