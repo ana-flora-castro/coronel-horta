@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EE Coronel Horta — Gestão de Professores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#2a7d4f;--green-light:#e8f5ee;--green-text:#1a5c38;
+  --yellow:#c8870a;--yellow-light:#fff8e6;--yellow-text:#8a5a00;
+  --red:#c0392b;--red-light:#fdecea;--red-text:#8b1a12;
+  --blue:#1a56a0;--blue-light:#e8f0fb;--blue-text:#0d3570;
+  --purple:#5b21b6;--purple-light:#f3e8ff;--purple-text:#3b0764;
+  --bg:#f4f5f0;--white:#fff;--border:#d8dbd2;--text:#1a1c17;--muted:#6b7066;
+  --radius:10px;--card-radius:14px;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ---- LOGIN SCREEN ---- */
+#login-screen{display:flex;min-height:100vh;align-items:stretch}
+.login-left{width:420px;min-width:360px;background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:3rem;border-right:1px solid var(--border)}
+.login-right{flex:1;background:linear-gradient(135deg,#e8f5ee 0%,#f0f5e8 50%,#e8f0fb 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2rem;padding:3rem}
+.school-hero{text-align:center}
+.school-hero .hero-icon{width:80px;height:80px;border-radius:20px;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;box-shadow:0 4px 20px rgba(42,125,79,.25)}
+.school-hero .hero-icon i{font-size:36px;color:#fff}
+.school-hero h1{font-size:22px;font-weight:600;color:var(--green);margin-bottom:.4rem}
+.school-hero p{font-size:13px;color:var(--muted);line-height:1.5}
+.login-title{font-size:18px;font-weight:600;margin-bottom:.4rem}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:2rem}
+.login-tabs{display:flex;background:#f4f5f0;border-radius:10px;padding:4px;margin-bottom:1.75rem;gap:4px}
+.login-tab{flex:1;padding:8px;border:none;background:transparent;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s}
+.login-tab.active{background:var(--white);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+input,select,textarea{font-family:var(--font);font-size:14px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text);outline:none;transition:border .15s;width:100%}
+input:focus,select:focus{border-color:var(--green)}
+.pin-wrap{display:flex;gap:10px;justify-content:center;margin:6px 0}
+.pin-wrap input{width:54px;height:54px;text-align:center;font-size:20px;font-weight:600;font-family:var(--mono);border-radius:12px;padding:0}
+.btn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);font-weight:500;font-size:14px;transition:all .15s;display:inline-flex;align-items:center;gap:7px;justify-content:center}
+.btn-primary{background:var(--green);color:#fff;width:100%}
+.btn-primary:hover{background:var(--green-text)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-outline:hover{background:#f0f0eb}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:8px;width:auto}
+.btn-danger{background:var(--red-light);color:var(--red-text);border:1px solid #f0a0a0}
+.login-err{background:var(--red-light);color:var(--red-text);border:1px solid #f0a0a0;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:1rem;display:none}
+.login-err.show{display:block}
+.register-link{text-align:center;margin-top:1.25rem;font-size:13px;color:var(--muted)}
+.register-link a{color:var(--green);text-decoration:none;font-weight:500;cursor:pointer}
+.feature-card{background:var(--white);border-radius:var(--card-radius);padding:1.25rem 1.5rem;max-width:320px;border:1px solid var(--border)}
+.feature-card h3{font-size:14px;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;gap:8px}
+.feature-card h3 i{color:var(--green)}
+.feature-card p{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ---- APP SHELL ---- */
+#app-shell{display:none}
+nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:1.5rem;height:60px;position:sticky;top:0;z-index:100}
+.logo{font-weight:600;font-size:15px;color:var(--green);letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.logo i{font-size:20px}
+nav .subtitle{font-size:12px;color:var(--muted);font-weight:400;border-left:1px solid var(--border);padding-left:1rem}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{padding:6px 14px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:5px}
+.nav-tab.active,.nav-tab:hover{background:var(--green-light);color:var(--green-text)}
+.nav-tab.active{color:var(--green)}
+.nav-tab.admin-only{border-left:2px solid var(--purple)}
+.user-pill{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px}
+.user-pill .avatar{width:30px;height:30px;border-radius:50%;background:var(--green-light);color:var(--green-text);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px}
+.user-pill .role-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.role-admin{background:var(--purple-light);color:var(--purple-text)}
+.role-prof{background:var(--blue-light);color:var(--blue-text)}
+/* PAGE */
+.page{display:none}.page.active{display:block}
+.container{max-width:1280px;margin:0 auto;padding:2rem}
+/* CARDS */
+.card{background:var(--white);border-radius:var(--card-radius);border:1px solid var(--border);padding:1.5rem}
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.badge-green{background:var(--green-light);color:var(--green-text)}
+.badge-yellow{background:var(--yellow-light);color:var(--yellow-text)}
+.badge-red{background:var(--red-light);color:var(--red-text)}
+.badge-purple{background:var(--purple-light);color:var(--purple-text)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot-green{background:var(--green)}.dot-yellow{background:#e6a817}.dot-red{background:var(--red)}
+/* GRID */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+/* STAT */
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--card-radius);padding:1.25rem 1.5rem}
+.stat-label{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem}
+.stat-value{font-size:28px;font-weight:600;line-height:1}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:6px}
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border);background:#fafaf8}
+td{padding:10px 14px;border-bottom:1px solid #f0f0eb;vertical-align:middle}
+tr:hover td{background:#fafaf8}
+tr:last-child td{border-bottom:none}
+.teacher-name{font-weight:500;font-size:13px}
+.teacher-sub{font-size:11px;color:var(--muted);margin-top:2px}
+/* PROGRESS */
+.prog-wrap{width:100%;background:#ebebeb;border-radius:4px;height:6px;overflow:hidden}
+.prog-fill{height:6px;border-radius:4px;transition:width .3s}
+.prog-green{background:var(--green)}.prog-yellow{background:#e6a817}.prog-red{background:var(--red)}
+/* SECTION */
+.section-title{font-size:15px;font-weight:600;margin-bottom:1.25rem;color:var(--text);display:flex;align-items:center;gap:8px}
+.section-title i{color:var(--green);font-size:18px}
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.form-group-inline{display:flex;flex-direction:column;gap:6px}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:var(--card-radius);padding:2rem;width:580px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center}
+.close-btn{background:none;border:none;cursor:pointer;font-size:22px;color:var(--muted);padding:4px;line-height:1}
+/* AGENDA */
+.agenda-wrap{border:1px solid var(--border);border-radius:var(--card-radius);overflow:hidden}
+.agenda-day{display:grid;grid-template-columns:100px 1fr;border-bottom:1px solid var(--border)}
+.agenda-day:last-child{border-bottom:none}
+.agenda-day-label{padding:12px 14px;background:#fafaf8;font-size:12px;font-weight:600;color:var(--muted);border-right:1px solid var(--border);display:flex;flex-direction:column;gap:3px}
+.agenda-day-label .day-name{font-size:13px;color:var(--text);font-weight:600}
+.agenda-events{padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.agenda-event{background:var(--blue-light);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--blue-text);display:flex;align-items:center;gap:8px}
+.agenda-event.formacao{background:var(--purple-light);color:var(--purple-text)}
+.agenda-event.aula{background:var(--green-light);color:var(--green-text)}
+/* MISC */
+.alinhamento-tag{background:#fff0f0;color:var(--red-text);border:1px solid #f0c0c0;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600}
+.mat-tag{display:inline-block;padding:2px 7px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:500;background:#e8f0fb;color:#1a56a0}
+.aula-chip{background:var(--blue-light);color:var(--blue-text);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:500;font-family:var(--mono)}
+.aula-chip.registered{background:var(--green-light);color:var(--green-text)}
+.table-wrap{overflow-x:auto}
+.empty{text-align:center;padding:3rem;color:var(--muted);font-size:13px}
+.empty i{font-size:32px;display:block;margin-bottom:.75rem;color:#ccc}
+.filter-row{display:flex;gap:.75rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap}
+.filter-row select{min-width:160px}
+.alert-strip{background:#fff8e6;border:1px solid #f0d060;border-radius:var(--card-radius);padding:1rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:12px;font-size:13px}
+.alert-strip i{font-size:20px;color:#e6a817}
+.ics-box{background:var(--blue-light);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue-text);display:flex;align-items:center;gap:10px;margin-top:.75rem}
+.ics-box input{background:transparent;border:none;flex:1;font-size:12px;color:var(--blue-text);outline:none;font-family:var(--mono)}
+/* VINCULAR PAGE */
+.cpf-card{background:var(--white);border:1px solid var(--border);border-radius:var(--card-radius);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem}
+.cpf-card.linked{border-left:3px solid var(--green)}
+.cpf-card.unlinked{border-left:3px solid var(--border)}
+.cpf-info{flex:1}
+.cpf-info .cpf-name{font-weight:500;font-size:14px}
+.cpf-info .cpf-detail{font-size:12px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.prof-select-inline{font-size:13px;padding:6px 10px;border-radius:8px;min-width:200px}
+/* PROF VIEW (professor vê só suas coisas) */
+.my-header{background:var(--green);color:#fff;padding:1.5rem 2rem;border-radius:var(--card-radius);margin-bottom:1.5rem}
+.my-header h2{font-size:18px;font-weight:600;margin-bottom:.25rem}
+.my-header p{font-size:13px;opacity:.85}
+</style>
+</head>
+<body>
+
+<!-- ========================================================
+     TELA DE LOGIN
+======================================================== -->
+<div id="login-screen">
+  <div class="login-left">
+    <div class="login-title">Bem-vindo</div>
+    <div class="login-sub">Faça login para acessar o sistema.</div>
+
+    <div class="login-tabs">
+      <button class="login-tab active" id="tab-login" onclick="switchLoginTab('login')">Entrar</button>
+      <button class="login-tab" id="tab-register" onclick="switchLoginTab('register')">Criar conta</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="login-err" id="login-err">CPF ou PIN incorretos. Tente novamente.</div>
+      <div class="form-group">
+        <label>CPF</label>
+        <input type="text" id="l-cpf" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)">
+      </div>
+      <div class="form-group">
+        <label>Senha (4 dígitos)</label>
+        <div class="pin-wrap">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p0" oninput="pinNext(this,1)">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p1" oninput="pinNext(this,2)" onkeydown="pinBack(event,this,0)">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p2" oninput="pinNext(this,3)" onkeydown="pinBack(event,this,1)">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]" id="p3" onkeydown="pinBack(event,this,2)" onkeyup="if(this.value)doLogin()">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()"><i class="ti ti-login"></i> Entrar</button>
+      <div class="register-link">Não tem conta? <a onclick="switchLoginTab('register')">Criar agora</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" style="display:none">
+      <div class="login-err" id="reg-err"></div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">Crie sua conta com CPF e PIN de 4 dígitos. Após o cadastro, aguarde a coordenação vincular seu acesso ao seu planejamento.</p>
+      <div class="form-group">
+        <label>Nome Completo</label>
+        <input type="text" id="r-nome" placeholder="Seu nome completo">
+      </div>
+      <div class="form-group">
+        <label>CPF</label>
+        <input type="text" id="r-cpf" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)">
+      </div>
+      <div class="form-group">
+        <label>Senha (4 dígitos)</label>
+        <div class="pin-wrap" style="justify-content:flex-start">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="r0" oninput="pinNext(this,'r1',true)">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="r1" oninput="pinNext(this,'r2',true)" onkeydown="pinBack(event,this,'r0',true)">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="r2" oninput="pinNext(this,'r3',true)" onkeydown="pinBack(event,this,'r1',true)">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="r3" onkeydown="pinBack(event,this,'r2',true)">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="doRegister()"><i class="ti ti-user-plus"></i> Criar conta</button>
+      <div class="register-link">Já tem conta? <a onclick="switchLoginTab('login')">Entrar</a></div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="school-hero">
+      <div class="hero-icon"><i class="ti ti-school"></i></div>
+      <h1>EE Coronel Horta</h1>
+      <p>Sistema de Gestão de<br>Planejamento de Aulas — <span id="ano-atual"></span></p>
+    </div>
+    <div class="feature-card">
+      <h3><i class="ti ti-calendar-check"></i> Planejamento integrado</h3>
+      <p>Registre aulas por turma com siglas MD, MI, EX, AV/SM, SB. Acompanhe o cronograma em tempo real.</p>
+    </div>
+    <div class="feature-card">
+      <h3><i class="ti ti-chart-bar"></i> Monitoramento de status</h3>
+      <p>A coordenação visualiza em tempo real quem está em dia (verde), atenção (amarelo) ou atraso (vermelho).</p>
+    </div>
+    <div class="feature-card">
+      <h3><i class="ti ti-brand-teams"></i> Integração com Teams</h3>
+      <p>Agenda exportável via link .ics para o Microsoft Teams ou Google Calendar.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     APP SHELL (após login)
+======================================================== -->
+<div id="app-shell">
+<nav>
+  <div class="logo"><i class="ti ti-school"></i> EE Coronel Horta</div>
+  <span class="subtitle" id="nav-subtitle">Gestão de Planejamento</span>
+  <div class="nav-tabs" id="nav-tabs-container"></div>
+  <div class="user-pill">
+    <div class="avatar" id="nav-avatar">?</div>
+    <span id="nav-username" style="font-size:13px;font-weight:500"></span>
+    <span class="role-badge" id="nav-role-badge"></span>
+    <button class="btn btn-outline btn-sm" onclick="openModal('modal-change-pin')" style="margin-right:4px"><i class="ti ti-key"></i> Alterar PIN</button><button class="btn btn-outline btn-sm" onclick="doLogout()"><i class="ti ti-logout"></i> Sair</button>
+  </div>
+</nav>
+
+<!-- PAINEL (admin) -->
+<div id="page-painel" class="page">
+<div class="container">
+  <div id="alert-strip-container"></div>
+  <div class="grid-4" style="margin-bottom:1.5rem">
+    <div class="stat"><div class="stat-label">Total Professores</div><div class="stat-value" id="stat-total">—</div><div class="stat-sub">cadastrados</div></div>
+    <div class="stat" style="border-left:3px solid var(--green)"><div class="stat-label" style="color:var(--green-text)"><span class="dot dot-green"></span> Em Dia</div><div class="stat-value" style="color:var(--green)" id="stat-green">—</div><div class="stat-sub">entregaram no prazo</div></div>
+    <div class="stat" style="border-left:3px solid #e6a817"><div class="stat-label" style="color:var(--yellow-text)"><span class="dot dot-yellow"></span> Atenção</div><div class="stat-value" style="color:#c8870a" id="stat-yellow">—</div><div class="stat-sub">começando a atrasar</div></div>
+    <div class="stat" style="border-left:3px solid var(--red)"><div class="stat-label" style="color:var(--red-text)"><span class="dot dot-red"></span> Em Atraso</div><div class="stat-value" style="color:var(--red)" id="stat-red">—</div><div class="stat-sub">precisam de alinhamento</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-list-check"></i> Situação de Entrega</div>
+  <div class="card" style="padding:0"><div class="table-wrap">
+    <table><thead><tr><th>Professor</th><th>Disciplina</th><th>Situação</th><th>Progresso</th><th>Aulas</th><th>Última entrega</th><th>Ação</th></tr></thead>
+    <tbody id="tbody-painel"></tbody></table>
+  </div></div>
+</div>
+</div>
+
+<!-- PROFESSORES (admin) -->
+<div id="page-professores" class="page">
+<div class="container">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <div class="section-title" style="margin:0"><i class="ti ti-users"></i> Equipe Docente</div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-prof')"><i class="ti ti-plus"></i> Novo Professor</button>
+  </div>
+  <div class="card" style="padding:0"><div class="table-wrap">
+    <table><thead><tr><th>Nome</th><th>Disciplina</th><th>Turmas</th><th>Formações</th><th>Status</th><th>Ações</th></tr></thead>
+    <tbody id="tbody-professores"></tbody></table>
+  </div></div>
+</div>
+</div>
+
+<!-- VINCULAR CPF (admin) -->
+<div id="page-vincular" class="page">
+<div class="container">
+  <div class="section-title"><i class="ti ti-link"></i> Vincular CPF ao Professor</div>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:1.5rem;max-width:600px">Aqui você associa o CPF cadastrado pelo professor (login) ao registro dele no sistema. Somente após esta vinculação o professor consegue acessar e preencher o seu próprio planejamento.</p>
+  <div class="grid-2" style="align-items:start;gap:2rem">
+    <div>
+      <div class="section-title" style="font-size:13px"><i class="ti ti-user-check"></i> Usuários aguardando vinculação</div>
+      <div id="pending-users-list"></div>
+    </div>
+    <div>
+      <div class="section-title" style="font-size:13px"><i class="ti ti-users"></i> Professores já vinculados</div>
+      <div id="linked-users-list"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- PLANEJAMENTO -->
+<div id="page-planejamento" class="page">
+<div class="container">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <div class="section-title" style="margin:0"><i class="ti ti-calendar-check"></i> Planejamento de Aulas</div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-plan')"><i class="ti ti-plus"></i> Registrar</button>
+  </div>
+  <div class="filter-row" id="plan-filters"></div>
+  <div id="planejamento-content"></div>
+</div>
+</div>
+
+<!-- AGENDA -->
+<div id="page-agenda" class="page">
+<div class="container">
+  <div class="section-title"><i class="ti ti-calendar"></i> Agenda</div>
+  <div class="grid-2" style="align-items:start">
+    <div>
+      <div class="filter-row" id="agenda-filter-row" style="margin-bottom:1rem"></div>
+      <div id="agenda-content" class="empty"><i class="ti ti-calendar-event"></i>Selecione um professor para ver a agenda</div>
+    </div>
+    <div id="teams-box" style="display:none">
+      <div class="card">
+        <div class="section-title" style="font-size:13px"><i class="ti ti-brand-teams"></i> Integração Microsoft Teams</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1rem">Copie o link e cole em Calendário → Adicionar Calendário → Inscrever-se via Web.</p>
+        <div class="ics-box"><i class="ti ti-link" style="font-size:16px" aria-hidden="true"></i><input id="ics-link" readonly value=""><button class="btn btn-sm btn-outline" onclick="copyICS()"><i class="ti ti-copy"></i> Copiar</button></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:.5rem">Compatível com Teams, Google Calendar e Outlook.</p>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <div class="section-title" style="font-size:13px"><i class="ti ti-clock"></i> Horário de Formações</div>
+        <div id="formacoes-box"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- LANÇAMENTO -->
+<div id="page-lancamento" class="page">
+<div class="container">
+  <div class="section-title"><i class="ti ti-pencil"></i> Lançamento Semanal</div>
+  <div id="my-header-lancamento"></div>
+  <div class="grid-2" style="align-items:start">
+    <div class="card">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">Informe toda sexta-feira qual aula você ministrou. O sistema compara com o cronograma e atualiza o status automaticamente.</p>
+      <div class="form-group" style="margin-bottom:1rem" id="lanc-prof-group"></div>
+      <div class="form-group" style="margin-bottom:1rem"><label>Data do Lançamento</label><input type="date" id="lanc-data"></div>
+      <div class="form-group" style="margin-bottom:1rem"><label>Turma</label>
+        <select id="lanc-turma"><option>6º ANO A</option><option>7º ANO A</option><option>8º ANO A</option><option>9º ANO A</option><option>1ª SÉRIE A</option><option>2ª SÉRIE A</option><option>3ª SÉRIE A</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group-inline"><label>Aula Ministrada Nº</label><input type="number" id="lanc-aula-num" min="1" max="50" placeholder="ex: 15"></div>
+        <div class="form-group-inline"><label>Total Previsto</label><input type="number" id="lanc-aula-total" min="1" max="50" placeholder="ex: 35"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:1rem;margin-top:1rem"><label>Material utilizado</label>
+        <select id="lanc-material">
+          <option value="MD">MD — Material Digital</option>
+          <option value="MI">MI — Material Impresso</option>
+          <option value="EX">EX — Lista de Exercícios</option>
+          <option value="AV/SM">AV/SM — Avaliação / Simulado</option>
+          <option value="SB">SB — Sondagem</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:1.5rem"><label>Observação (opcional)</label><textarea id="lanc-obs" rows="2" placeholder="Ex: turma adiantada, revisão..."></textarea></div>
+      <button class="btn btn-primary" onclick="registrarLancamento()"><i class="ti ti-check"></i> Registrar Lançamento</button>
+    </div>
+    <div>
+      <div class="section-title" style="font-size:13px"><i class="ti ti-history"></i> Histórico</div>
+      <div class="card" style="padding:0"><div class="table-wrap">
+        <table><thead><tr><th>Data</th><th>Professor</th><th>Turma</th><th>Aula</th><th>Material</th></tr></thead>
+        <tbody id="tbody-lancamentos"></tbody></table>
+      </div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /app-shell -->
+
+<!-- ========================================================
+     MODAIS
+======================================================== -->
+<div class="modal-overlay" id="modal-add-prof">
+  <div class="modal">
+    <div class="modal-title">Adicionar Professor <button class="close-btn" onclick="closeModal('modal-add-prof')">×</button></div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>Nome Completo</label><input id="np-nome" placeholder="Nome completo"></div>
+      <div class="form-group-inline"><label>Disciplina</label><input id="np-disc" placeholder="Ex: Matemática"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>Total Aulas Previstas</label><input type="number" id="np-total" placeholder="35"></div>
+      <div class="form-group-inline"><label>Status</label><select id="np-status"><option value="green">Em Dia</option><option value="yellow">Atenção</option><option value="red">Atraso</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem"><label>MULTIPICA (dia/horário)</label><input id="np-mult" placeholder="Ex: Terça 17:25-18:55"></div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>EFAPE-1</label><input id="np-ef1" placeholder="Ex: Terça 07:30-08:20"></div>
+      <div class="form-group-inline"><label>EFAPE-2</label><input id="np-ef2" placeholder="Ex: Terça 08:20-09:25"></div>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.25rem">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-add-prof')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="addProfessor()"><i class="ti ti-check"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-plan">
+  <div class="modal">
+    <div class="modal-title">Registrar Planejamento <button class="close-btn" onclick="closeModal('modal-add-plan')">×</button></div>
+    <div class="form-row">
+      <div class="form-group-inline" id="pl-prof-group"></div>
+      <div class="form-group-inline"><label>Mês</label><select id="pl-mes"><option>Abril</option><option>Maio</option><option>Junho</option><option>Julho</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>Turma</label><select id="pl-turma"><option>6º ANO A</option><option>7º ANO A</option><option>8º ANO A</option><option>9º ANO A</option><option>1ª SÉRIE A</option><option>2ª SÉRIE A</option><option>3ª SÉRIE A</option></select></div>
+      <div class="form-group-inline"><label>Data</label><input type="date" id="pl-data"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group-inline"><label>Aula Nº</label><input type="number" id="pl-aula" placeholder="14"></div>
+      <div class="form-group-inline"><label>Material</label><select id="pl-mat"><option value="MD">MD — Material Digital</option><option value="MI">MI — Material Impresso</option><option value="EX">EX — Lista de Exercícios</option><option value="AV/SM">AV/SM — Avaliação / Simulado</option><option value="SB">SB — Sondagem</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:1.5rem"><label>Observação</label><input id="pl-obs" placeholder="Ex: Revisão Prova Paulista"></div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-add-plan')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="addPlanejamento()"><i class="ti ti-check"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   STORAGE HELPERS
+============================================================ */
+const LS = {
+  get:(k,def)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){return def;} },
+  set:(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+
+/* ============================================================
+   INITIAL DATA
+============================================================ */
+const PROF_SEED = [
+  {id:1,nome:"Ana Paula M. da Silva Curvello",disciplina:"Português / RED.LEIT",turmas:["9º ANO A","1ª SÉRIE A","6º ANO A"],totalAulas:35,aulasMinistradas:18,status:"green",mult:"Sexta 17:25-18:55",ef1:"Terça 07:30-08:20",ef2:"Terça 08:20-09:25",ultimaEntrega:"28/05/2026",cargo:"PAAC Linguagens"},
+  {id:2,nome:"Antonio Carlos Nascimento",disciplina:"História / Filosofia",turmas:["6º ANO A","7º ANO A","8º ANO A","9º ANO A"],totalAulas:30,aulasMinistradas:12,status:"yellow",mult:"Terça 15:30-17:00",ef1:"Terça 09:25-10:15",ef2:"Terça 10:15-11:05",ultimaEntrega:"21/05/2026",cargo:"PAAC Humanas"},
+  {id:3,nome:"Fábio Martins Cardoso",disciplina:"Tecnologia / Robótica",turmas:["6º ANO A","7º ANO A","8º ANO A"],totalAulas:28,aulasMinistradas:10,status:"red",mult:"Segunda 08:00-09:30",ef1:"Terça 07:30-08:20",ef2:"Quarta 14:50-15:40",ultimaEntrega:"14/05/2026",cargo:"Professor"},
+  {id:4,nome:"Fernanda Camargo de Campos",disciplina:"Ed. Física / Projeto de Vida",turmas:["6º ANO A","8º ANO A","1ª SÉRIE A"],totalAulas:32,aulasMinistradas:20,status:"green",mult:"Terça 08:00-09:30",ef1:"Segunda 07:30-08:20",ef2:"Segunda 08:20-09:10",ultimaEntrega:"29/05/2026",cargo:"Professor"},
+  {id:5,nome:"Kely Cristina Cordeiro",disciplina:"Português / RED.LEIT",turmas:["8º ANO A","2ª SÉRIE A","3ª SÉRIE A"],totalAulas:35,aulasMinistradas:22,status:"green",mult:"Quinta 08:00-09:30",ef1:"Terça 07:30-08:20",ef2:"Terça 08:20-09:10",ultimaEntrega:"29/05/2026",cargo:"Professor"},
+  {id:6,nome:"Luiz Antonio de Carvalho",disciplina:"Geografia / História EM",turmas:["6º ANO A","7º ANO A","1ª SÉRIE A"],totalAulas:30,aulasMinistradas:14,status:"yellow",mult:"Quarta 17:00-18:30",ef1:"Segunda 10:15-11:05",ef2:"Quinta 07:30-08:20",ultimaEntrega:"22/05/2026",cargo:"Professor"},
+  {id:7,nome:"Luiziene Soares Alves",disciplina:"Ciências",turmas:["6º ANO A","7º ANO A","8º ANO A","9º ANO A"],totalAulas:32,aulasMinistradas:8,status:"red",mult:"Terça 17:25-18:55",ef1:"Quinta 10:15-11:05",ef2:"Quinta 11:05-11:55",ultimaEntrega:"07/05/2026",cargo:"Professor"},
+  {id:8,nome:"Marcia Cristina da Silva Paiva",disciplina:"Coordenação",turmas:[],totalAulas:0,aulasMinistradas:0,status:"green",mult:"Sexta 08:00-09:30",ef1:"-",ef2:"-",ultimaEntrega:"-",cargo:"CGPG"},
+  {id:9,nome:"Neuza Gomes de Campos",disciplina:"Matemática",turmas:["9º ANO A","2ª SÉRIE A","3ª SÉRIE A"],totalAulas:35,aulasMinistradas:19,status:"green",mult:"Sexta 09:30-11:00",ef1:"Quarta 08:20-09:10",ef2:"Quarta 10:15-11:05",ultimaEntrega:"27/05/2026",cargo:"Professor"},
+  {id:10,nome:"Nidia Cardeal da Fonseca",disciplina:"Língua Inglesa",turmas:["6º ANO A","7º ANO A","8º ANO A"],totalAulas:30,aulasMinistradas:18,status:"green",mult:"Quinta 17:25-18:55",ef1:"Quinta 07:30-08:20",ef2:"Quinta 08:20-09:10",ultimaEntrega:"28/05/2026",cargo:"Professor"},
+  {id:11,nome:"Regiane Brito Carvalho Silva",disciplina:"Matemática / Oratória",turmas:["6º ANO A","7º ANO A","1ª SÉRIE A","2ª SÉRIE A"],totalAulas:35,aulasMinistradas:21,status:"green",mult:"Terça 17:25-18:55",ef1:"Quarta 07:30-08:20",ef2:"Quarta 08:20-09:25",ultimaEntrega:"29/05/2026",cargo:"PAAC Ciências/Mat"},
+  {id:12,nome:"Regina Celia Barbosa",disciplina:"Direção",turmas:[],totalAulas:0,aulasMinistradas:0,status:"green",mult:"Quarta 10:00-11:30",ef1:"-",ef2:"-",ultimaEntrega:"-",cargo:"Diretora"},
+  {id:13,nome:"Salete Aparecida da Silva",disciplina:"Arte / Projeto de Vida",turmas:["6º ANO A","7º ANO A","9º ANO A"],totalAulas:28,aulasMinistradas:16,status:"green",mult:"Segunda 17:25-18:55",ef1:"Quarta 07:30-08:20",ef2:"Quarta 08:20-09:10",ultimaEntrega:"27/05/2026",cargo:"Professor"},
+  {id:14,nome:"Valter Alves Ferreira",disciplina:"Matemática EM / Ed. Financeira",turmas:["6º ANO A","1ª SÉRIE A","2ª SÉRIE A"],totalAulas:30,aulasMinistradas:11,status:"yellow",mult:"Quinta 09:00-10:30",ef1:"Quarta 09:25-10:15",ef2:"Quarta 10:15-11:05",ultimaEntrega:"20/05/2026",cargo:"Professor"},
+];
+
+/* CONTAS FIXAS DE ADMIN */
+const ADMIN_ACCOUNTS_MUTABLE = [
+  {cpf:"467.628.268-06", pin:"0000", nome:"Admin", role:"admin"},
+  {cpf:"159.540.678-64", pin:"1111", nome:"Márcia Paiva", role:"admin", profId:8},
+];
+// Load any saved PIN changes
+(function(){
+  const saved = LS.get('admin_pins_v2',[]);
+  saved.forEach(s=>{ const a=ADMIN_ACCOUNTS_MUTABLE.find(x=>x.cpf===s.cpf); if(a) a.pin=s.pin; });
+})();
+const ADMIN_ACCOUNTS = ADMIN_ACCOUNTS_MUTABLE;
+
+/* ============================================================
+   STATE
+============================================================ */
+let professores   = LS.get('prof_v2', PROF_SEED);
+let planejamentos = LS.get('plans_v2', []);
+let lancamentos   = LS.get('lancs_v2', []);
+let usuarios      = LS.get('usuarios_v2', []); // {cpf, pin, nome, role:'prof', profId:null|id}
+let currentUser   = null;
+
+function save(){
+  LS.set('prof_v2', professores);
+  LS.set('plans_v2', planejamentos);
+  LS.set('lancs_v2', lancamentos);
+  LS.set('usuarios_v2', usuarios);
+}
+
+/* ============================================================
+   AUTH
+============================================================ */
+function maskCPF(el){
+  let v=el.value.replace(/\D/g,'').substring(0,11);
+  if(v.length>9) v=v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/,'$1.$2.$3-$4');
+  else if(v.length>6) v=v.replace(/^(\d{3})(\d{3})(\d{0,3}).*/,'$1.$2.$3');
+  else if(v.length>3) v=v.replace(/^(\d{3})(\d{0,3}).*/,'$1.$2');
+  el.value=v;
+}
+
+function pinNext(el,nextId,isReg){
+  el.value=el.value.replace(/\D/g,'');
+  if(el.value&&nextId){
+    const next = document.getElementById(isReg?nextId:'p'+nextId);
+    if(next) next.focus();
+  }
+}
+function pinBack(e,el,prevId,isReg){
+  if(e.key==='Backspace'&&!el.value){
+    const prev=document.getElementById(isReg?prevId:'p'+prevId);
+    if(prev){ prev.value=''; prev.focus(); }
+  }
+}
+
+function getPin(prefix,count){
+  let p='';
+  for(let i=0;i<count;i++) p+=(document.getElementById(prefix+i)||{}).value||'';
+  return p;
+}
+
+function doLogin(){
+  const cpf = document.getElementById('l-cpf').value.trim();
+  const pin = getPin('p',4);
+  const err = document.getElementById('login-err');
+  
+  // check admin accounts first
+  const adminMatch = ADMIN_ACCOUNTS.find(a=>a.cpf===cpf&&a.pin===pin);
+  if(adminMatch){ loginSuccess(adminMatch); return; }
+  
+  // check registered users
+  const userMatch = usuarios.find(u=>u.cpf===cpf&&u.pin===pin);
+  if(userMatch){ loginSuccess(userMatch); return; }
+  
+  err.classList.add('show');
+  ['p0','p1','p2','p3'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('p0').focus();
+}
+
+function loginSuccess(user){
+  currentUser = user;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-shell').style.display='block';
+  buildNav();
+  const firstPage = isAdmin() ? 'painel' : 'planejamento';
+  activatePage(firstPage);
+  // nav user pill
+  const initials = user.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
+  document.getElementById('nav-avatar').textContent = initials;
+  document.getElementById('nav-username').textContent = user.nome.split(' ')[0];
+  document.getElementById('nav-role-badge').textContent = isAdmin()?'Admin':'Professor';
+  document.getElementById('nav-role-badge').className = 'role-badge '+(isAdmin()?'role-admin':'role-prof');
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('app-shell').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  ['p0','p1','p2','p3'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('l-cpf').value='';
+  document.getElementById('login-err').classList.remove('show');
+}
+
+function doRegister(){
+  const nome = document.getElementById('r-nome').value.trim();
+  const cpf  = document.getElementById('r-cpf').value.trim();
+  const pin  = getPin('r',4);
+  const err  = document.getElementById('reg-err');
+  
+  if(!nome){showRegErr('Informe seu nome completo.');return;}
+  if(cpf.length<14){showRegErr('CPF inválido. Use o formato 000.000.000-00.');return;}
+  if(pin.length<4){showRegErr('PIN deve ter exatamente 4 dígitos.');return;}
+  
+  const jaExiste = [...ADMIN_ACCOUNTS, ...usuarios].find(u=>u.cpf===cpf);
+  if(jaExiste){showRegErr('Este CPF já está cadastrado.');return;}
+  
+  usuarios.push({cpf,pin,nome,role:'prof',profId:null});
+  save();
+  err.style.display='block'; err.style.background='var(--green-light)'; err.style.color='var(--green-text)'; err.style.border='1px solid #a0d0b0';
+  err.textContent='Conta criada! Aguarde a coordenação vincular seu acesso.';
+  setTimeout(()=>switchLoginTab('login'),2500);
+}
+function showRegErr(msg){
+  const err=document.getElementById('reg-err');
+  err.style.display='block'; err.style.background='var(--red-light)'; err.style.color='var(--red-text)'; err.style.border='1px solid #f0a0a0';
+  err.textContent=msg;
+}
+
+function switchLoginTab(tab){
+  document.getElementById('form-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('form-register').style.display = tab==='register'?'block':'none';
+  document.getElementById('tab-login').className = 'login-tab'+(tab==='login'?' active':'');
+  document.getElementById('tab-register').className = 'login-tab'+(tab==='register'?' active':'');
+  document.getElementById('reg-err').style.display='none';
+  document.getElementById('login-err').classList.remove('show');
+}
+
+function isAdmin(){ return currentUser&&(currentUser.role==='admin'); }
+function myProfId(){ 
+  if(isAdmin()) return null; 
+  return currentUser&&currentUser.profId;
+}
+
+/* ============================================================
+   NAV BUILD
+============================================================ */
+const NAV_ADMIN = [
+  {id:'painel',icon:'ti-layout-dashboard',label:'Painel'},
+  {id:'professores',icon:'ti-users',label:'Professores'},
+  {id:'vincular',icon:'ti-link',label:'Vincular CPF',admin:true},
+  {id:'planejamento',icon:'ti-calendar-check',label:'Planejamento'},
+  {id:'agenda',icon:'ti-calendar',label:'Agenda'},
+  {id:'lancamento',icon:'ti-pencil',label:'Lançamento'},
+];
+const NAV_PROF = [
+  {id:'planejamento',icon:'ti-calendar-check',label:'Meu Planejamento'},
+  {id:'agenda',icon:'ti-calendar',label:'Minha Agenda'},
+  {id:'lancamento',icon:'ti-pencil',label:'Lançamento'},
+];
+
+function buildNav(){
+  const tabs = isAdmin() ? NAV_ADMIN : NAV_PROF;
+  document.getElementById('nav-tabs-container').innerHTML = tabs.map(t=>
+    `<button class="nav-tab${t.admin?' admin-only':''}" id="navbtn-${t.id}" onclick="activatePage('${t.id}')">
+      <i class="ti ${t.icon}" aria-hidden="true"></i> ${t.label}
+    </button>`
+  ).join('');
+}
+
+function activatePage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
+  if(page) page.classList.add('active');
+  const btn = document.getElementById('navbtn-'+id);
+  if(btn) btn.classList.add('active');
+  
+  if(id==='painel') renderPainel();
+  if(id==='professores') renderProfessores();
+  if(id==='vincular') renderVincular();
+  if(id==='planejamento') renderPlanejamento();
+  if(id==='agenda') setupAgenda();
+  if(id==='lancamento') setupLancamento();
+}
+
+/* ============================================================
+   UTILS
+============================================================ */
+function statusBadge(s){
+  if(s==='green') return '<span class="badge badge-green"><span class="dot dot-green"></span>Em Dia</span>';
+  if(s==='yellow') return '<span class="badge badge-yellow"><span class="dot dot-yellow"></span>Atenção</span>';
+  if(s==='red') return '<span class="badge badge-red"><span class="dot dot-red"></span>Atraso</span><span class="alinhamento-tag" style="margin-left:6px">Alinhamento</span>';
+  return '';
+}
+function progColor(s){return s==='green'?'prog-green':s==='yellow'?'prog-yellow':'prog-red'}
+function pct(p,t){return t>0?Math.round(p/t*100):0}
+
+/* ============================================================
+   PAINEL (admin only)
+============================================================ */
+function renderPainel(){
+  const docentes=professores.filter(p=>p.totalAulas>0);
+  document.getElementById('stat-total').textContent=docentes.length;
+  document.getElementById('stat-green').textContent=docentes.filter(p=>p.status==='green').length;
+  document.getElementById('stat-yellow').textContent=docentes.filter(p=>p.status==='yellow').length;
+  document.getElementById('stat-red').textContent=docentes.filter(p=>p.status==='red').length;
+  const reds=docentes.filter(p=>p.status==='red'), yellows=docentes.filter(p=>p.status==='yellow');
+  let alertHtml='';
+  if(reds.length) alertHtml+=`<div class="alert-strip"><i class="ti ti-alert-triangle"></i><strong>${reds.length} professor(es) em atraso</strong> — ${reds.map(p=>p.nome.split(' ')[0]).join(', ')} precisam de alinhamento.</div>`;
+  if(yellows.length) alertHtml+=`<div class="alert-strip" style="background:var(--yellow-light)"><i class="ti ti-alert-circle"></i><strong>${yellows.length} com atenção</strong> — ${yellows.map(p=>p.nome.split(' ')[0]).join(', ')} estão começando a atrasar.</div>`;
+  document.getElementById('alert-strip-container').innerHTML=alertHtml;
+  document.getElementById('tbody-painel').innerHTML=docentes.map(p=>{
+    const pv=pct(p.aulasMinistradas,p.totalAulas);
+    return `<tr>
+      <td><div class="teacher-name">${p.nome}</div><div class="teacher-sub">${p.cargo}</div></td>
+      <td>${p.disciplina}</td>
+      <td>${statusBadge(p.status)}</td>
+      <td style="min-width:120px"><div style="display:flex;align-items:center;gap:8px">
+        <div class="prog-wrap" style="width:90px"><div class="prog-fill ${progColor(p.status)}" style="width:${pv}%"></div></div>
+        <span style="font-size:12px;font-family:var(--mono)">${pv}%</span>
+      </div></td>
+      <td><span style="font-family:var(--mono);font-size:13px;font-weight:500">${p.aulasMinistradas}/${p.totalAulas}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${p.ultimaEntrega}</td>
+      <td>${p.status!=='green'?`<button class="btn btn-sm btn-outline" onclick="marcarAlinhamento(${p.id})"><i class="ti ti-message"></i> Alinhamento</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+function marcarAlinhamento(id){
+  const p=professores.find(x=>x.id===id);
+  if(p&&confirm(`Registrar alinhamento com ${p.nome.split(' ')[0]}?`)){p.status=p.status==='red'?'yellow':'green';save();renderPainel();}
+}
+
+/* ============================================================
+   PROFESSORES (admin only)
+============================================================ */
+function renderProfessores(){
+  document.getElementById('tbody-professores').innerHTML=professores.map(p=>`<tr>
+    <td><div class="teacher-name">${p.nome}</div><div class="teacher-sub">${p.cargo}</div></td>
+    <td>${p.disciplina}</td>
+    <td style="font-size:12px">${p.turmas.slice(0,3).join(', ')+(p.turmas.length>3?'…':'')}</td>
+    <td style="font-size:12px">
+      ${p.mult&&p.mult!=='-'?`<span style="color:var(--muted)">MULT:</span> ${p.mult}<br>`:''}
+      ${p.ef1&&p.ef1!=='-'?`<span style="color:var(--muted)">EF1:</span> ${p.ef1}<br>`:''}
+      ${p.ef2&&p.ef2!=='-'?`<span style="color:var(--muted)">EF2:</span> ${p.ef2}`:''}
+    </td>
+    <td>${statusBadge(p.status)}</td>
+    <td><button class="btn btn-sm btn-outline" onclick="cycleStatus(${p.id})"><i class="ti ti-refresh"></i> Status</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteProfessor(${p.id})"><i class="ti ti-trash"></i></button></td>
+  </tr>`).join('');
+}
+function cycleStatus(id){const p=professores.find(x=>x.id===id);if(!p)return;const o=['green','yellow','red'];p.status=o[(o.indexOf(p.status)+1)%3];save();renderProfessores();}
+function deleteProfessor(id){if(confirm('Remover professor?')){professores=professores.filter(p=>p.id!==id);save();renderProfessores();}}
+function addProfessor(){
+  const nome=document.getElementById('np-nome').value.trim(),disc=document.getElementById('np-disc').value.trim();
+  if(!nome||!disc){alert('Preencha nome e disciplina.');return;}
+  const newId=Math.max(0,...professores.map(p=>p.id))+1;
+  professores.push({id:newId,nome,disciplina:disc,turmas:[],totalAulas:parseInt(document.getElementById('np-total').value)||35,aulasMinistradas:0,status:document.getElementById('np-status').value,mult:document.getElementById('np-mult').value,ef1:document.getElementById('np-ef1').value,ef2:document.getElementById('np-ef2').value,ultimaEntrega:'-',cargo:'Professor'});
+  save();closeModal('modal-add-prof');renderProfessores();
+}
+
+/* ============================================================
+   VINCULAR CPF (admin only)
+============================================================ */
+function renderVincular(){
+  const pending = usuarios.filter(u=>u.role==='prof'&&!u.profId);
+  const linked  = usuarios.filter(u=>u.role==='prof'&&u.profId);
+  
+  // pending
+  const pdiv = document.getElementById('pending-users-list');
+  if(!pending.length){
+    pdiv.innerHTML='<div class="empty" style="padding:1.5rem"><i class="ti ti-user-check"></i>Nenhum usuário aguardando vinculação</div>';
+  } else {
+    pdiv.innerHTML = pending.map(u=>`
+      <div class="cpf-card unlinked">
+        <div class="cpf-info">
+          <div class="cpf-name">${u.nome}</div>
+          <div class="cpf-detail">${u.cpf}</div>
+        </div>
+        <select class="prof-select-inline" id="sel-${u.cpf.replace(/\D/g,'')}">
+          <option value="">— Selecionar professor —</option>
+          ${professores.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="vincularUser('${u.cpf}')"><i class="ti ti-link"></i> Vincular</button>
+      </div>
+    `).join('');
+  }
+  
+  // linked
+  const ldiv = document.getElementById('linked-users-list');
+  if(!linked.length){
+    ldiv.innerHTML='<div class="empty" style="padding:1.5rem"><i class="ti ti-users"></i>Nenhum professor vinculado ainda</div>';
+  } else {
+    ldiv.innerHTML = linked.map(u=>{
+      const prof = professores.find(p=>p.id===u.profId);
+      return `<div class="cpf-card linked">
+        <div class="cpf-info">
+          <div class="cpf-name">${u.nome}</div>
+          <div class="cpf-detail">${u.cpf} → ${prof?prof.nome:'Professor não encontrado'}</div>
+        </div>
+        <span class="badge badge-green"><i class="ti ti-check" aria-hidden="true"></i> Vinculado</span>
+        <button class="btn btn-sm btn-danger" onclick="desvincularUser('${u.cpf}')"><i class="ti ti-unlink"></i></button>
+      </div>`;
+    }).join('');
+  }
+}
+
+function vincularUser(cpf){
+  const key = cpf.replace(/\D/g,'');
+  const sel = document.getElementById('sel-'+key);
+  if(!sel||!sel.value){alert('Selecione um professor.');return;}
+  const u = usuarios.find(x=>x.cpf===cpf);
+  if(u){ u.profId=parseInt(sel.value); save(); renderVincular(); alert('Vinculado com sucesso!'); }
+}
+function desvincularUser(cpf){
+  if(!confirm('Desvincular este usuário?')) return;
+  const u=usuarios.find(x=>x.cpf===cpf);
+  if(u){u.profId=null;save();renderVincular();}
+}
+
+/* ============================================================
+   PLANEJAMENTO
+============================================================ */
+function renderPlanejamento(){
+  const filtersDiv = document.getElementById('plan-filters');
+  
+  // admin: filtros completos; professor: só seu próprio planejamento
+  if(isAdmin()){
+    filtersDiv.innerHTML=`
+      <select id="filter-prof-plan" onchange="renderPlanTable()"><option value="">Todos os professores</option>${professores.filter(p=>p.totalAulas>0).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select>
+      <select id="filter-mes-plan" onchange="renderPlanTable()"><option value="">Todos os meses</option><option>Abril</option><option>Maio</option><option>Junho</option><option>Julho</option></select>
+      <select id="filter-turma-plan" onchange="renderPlanTable()"><option value="">Todas as turmas</option>${['6º ANO A','7º ANO A','8º ANO A','9º ANO A','1ª SÉRIE A','2ª SÉRIE A','3ª SÉRIE A'].map(t=>`<option>${t}</option>`).join('')}</select>`;
+    // modal prof select
+    document.getElementById('pl-prof-group').innerHTML=`<label>Professor</label><select id="pl-prof">${professores.filter(p=>p.totalAulas>0).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select>`;
+  } else {
+    const pid = myProfId();
+    const prof = professores.find(p=>p.id===pid);
+    filtersDiv.innerHTML=prof?`<div class="my-header"><h2>${prof.nome}</h2><p>${prof.disciplina} · ${prof.cargo}</p></div>`:'';
+    // modal: campo oculto
+    document.getElementById('pl-prof-group').innerHTML=`<input type="hidden" id="pl-prof" value="${pid||''}"><label>Professor</label><input readonly value="${prof?prof.nome:''}">`;
+    if(!pid){
+      document.getElementById('planejamento-content').innerHTML='<div class="empty"><i class="ti ti-alert-circle"></i>Seu acesso ainda não foi vinculado a um professor.<br>Aguarde a coordenação realizar a vinculação.</div>';
+      return;
+    }
+  }
+  renderPlanTable();
+}
+
+function renderPlanTable(){
+  const filtProf = isAdmin()?(document.getElementById('filter-prof-plan')||{}).value:'';
+  const filtMes  = isAdmin()?(document.getElementById('filter-mes-plan')||{}).value:'';
+  const filtTurma= isAdmin()?(document.getElementById('filter-turma-plan')||{}).value:'';
+  
+  let items = planejamentos;
+  if(!isAdmin()){ const pid=myProfId(); if(pid) items=items.filter(i=>i.profId===pid); else{items=[];} }
+  if(filtProf) items=items.filter(i=>i.profId==filtProf);
+  if(filtMes) items=items.filter(i=>i.mes===filtMes);
+  if(filtTurma) items=items.filter(i=>i.turma===filtTurma);
+  
+  const div=document.getElementById('planejamento-content');
+  if(!items.length){div.innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i>Nenhum planejamento registrado. Clique em "Registrar" para começar.</div>';return;}
+  
+  const grouped={};
+  items.forEach(i=>{const p=professores.find(x=>x.id==i.profId);const key=`${p?p.nome:'?'} — ${i.mes}`;if(!grouped[key])grouped[key]=[];grouped[key].push(i);});
+  
+  div.innerHTML=Object.entries(grouped).map(([key,rows])=>`
+    <div class="card" style="margin-bottom:1rem;padding:0">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;background:#fafaf8;border-radius:var(--card-radius) var(--card-radius) 0 0">${key}</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Data</th><th>Turma</th><th>Aula Nº</th><th>Material</th><th>Obs.</th><th></th></tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr>
+          <td style="font-family:var(--mono);font-size:12px">${r.data}</td>
+          <td style="font-size:12px">${r.turma}</td>
+          <td><span class="aula-chip">Aula ${r.aula}</span></td>
+          <td><span class="mat-tag">${r.material}</span></td>
+          <td style="font-size:12px;color:var(--muted)">${r.obs||'—'}</td>
+          <td><button class="btn btn-sm btn-danger" onclick="deletePlan(${planejamentos.indexOf(r)})"><i class="ti ti-trash"></i></button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`).join('');
+}
+
+function addPlanejamento(){
+  const profIdRaw = document.getElementById('pl-prof').value;
+  const mes    = document.getElementById('pl-mes').value;
+  const turma  = document.getElementById('pl-turma').value;
+  const data   = document.getElementById('pl-data').value;
+  const aula   = document.getElementById('pl-aula').value;
+  const material=document.getElementById('pl-mat').value;
+  const obs    = document.getElementById('pl-obs').value;
+  if(!profIdRaw||!data||!aula){alert('Preencha professor, data e aula.');return;}
+  planejamentos.push({profId:parseInt(profIdRaw),mes,turma,data,aula:parseInt(aula),material,obs});
+  save();closeModal('modal-add-plan');renderPlanTable();
+}
+
+function deletePlan(idx){if(confirm('Remover este planejamento?')){planejamentos.splice(idx,1);save();renderPlanTable();}}
+
+/* ============================================================
+   AGENDA
+============================================================ */
+const DIAS_FULL=['Segunda','Terça','Quarta','Quinta','Sexta'];
+const DIAS_SHORT=['Seg','Ter','Qua','Qui','Sex'];
+const HORARIO_GERAL={
+  "ANA PAULA":{Seg:['RED.LEIT 9º A'],Ter:['PORT 1ª A'],Qua:['PORT 6º A'],Qui:['RED.LEIT 6º A'],Sex:['PORT 9º A']},
+  "ANTONIO":{Seg:['HIST 7º A'],Ter:['HIST 6º A'],Qua:['HIST 8º A'],Qui:['HIST 7º A'],Sex:['HIST 9º A']},
+  "FABIO":{Seg:['TEC 6º A'],Ter:['ROB 7º A'],Qua:['MAT 8º A'],Qui:['TEC 7º A'],Sex:['ROB 6º A']},
+  "FERNANDA":{Seg:[],Ter:['EDF 6º A'],Qua:['EDF 8º A'],Qui:['EDF 1ª A'],Sex:['EDF 9º A']},
+  "KELY":{Seg:[],Ter:['PORT 7º A'],Qua:['RED 3ª A'],Qui:['PORT 8º A'],Sex:['RED 8º A']},
+  "LUIZ":{Seg:['GEO 6º A'],Ter:[],Qua:['GEO 7º A'],Qui:['GEO 7º A'],Sex:['GEO 1ª A']},
+  "LUIZIENE":{Seg:[],Ter:['PRAT 9º A'],Qua:[],Qui:['CIEN 6º A'],Sex:['CIEN 8º A']},
+  "NEUSA":{Seg:['MAT 3ª A'],Ter:['MAT 9º A'],Qua:[],Qui:['MAT 3ª A'],Sex:['MAT 9º A']},
+  "NIDIA":{Seg:[],Ter:['ING 8º A'],Qua:['OE PORT 8º A'],Qui:['ING 6º A'],Sex:['ING 3ª A']},
+  "REGIANE":{Seg:['MAT 6º A'],Ter:['MAT 7º A'],Qua:['MAT 6º A'],Qui:['MAT 6º A'],Sex:['MAT 1ª A']},
+  "SALETE":{Seg:['ARTE 6º A'],Ter:['ARTE 1ª A'],Qua:['PROJ VIDA 7º A'],Qui:['ARTE 7º A'],Sex:['EMA 6º A']},
+  "VALTER":{Seg:['ED FIN 1ª A'],Ter:['ED FIN 8º A'],Qua:['OE MAT 1ª A'],Qui:[],Sex:['ED FIN 2ª A']},
+};
+
+function setupAgenda(){
+  const row = document.getElementById('agenda-filter-row');
+  if(isAdmin()){
+    row.innerHTML=`<select id="filter-prof-agenda" onchange="renderAgenda()">
+      <option value="">Selecione um professor</option>
+      ${professores.filter(p=>p.totalAulas>0).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}
+    </select>`;
+    document.getElementById('agenda-content').innerHTML='<div class="empty"><i class="ti ti-calendar-event"></i>Selecione um professor para ver a agenda</div>';
+    document.getElementById('teams-box').style.display='none';
+  } else {
+    const pid=myProfId();
+    if(!pid){row.innerHTML='';document.getElementById('agenda-content').innerHTML='<div class="empty"><i class="ti ti-alert-circle"></i>Acesso não vinculado ainda.</div>';return;}
+    row.innerHTML='';
+    renderAgendaForProf(pid);
+  }
+}
+
+function renderAgenda(){
+  const sel=document.getElementById('filter-prof-agenda');
+  if(!sel||!sel.value){document.getElementById('agenda-content').innerHTML='<div class="empty"><i class="ti ti-calendar-event"></i>Selecione um professor</div>';document.getElementById('teams-box').style.display='none';return;}
+  renderAgendaForProf(parseInt(sel.value));
+}
+
+function renderAgendaForProf(profId){
+  const prof=professores.find(p=>p.id===profId);
+  if(!prof) return;
+  document.getElementById('teams-box').style.display='block';
+  document.getElementById('ics-link').value=`https://escola.coronelhorta.sp.gov.br/ics/${prof.nome.split(' ')[0].toLowerCase()}_${profId}.ics`;
+  
+  let formHtml='<table style="width:100%;font-size:12px"><tbody>';
+  if(prof.mult&&prof.mult!=='-') formHtml+=`<tr><td style="padding:4px 0;color:var(--muted)">MULTIPICA</td><td style="text-align:right;font-weight:500">${prof.mult}</td></tr>`;
+  if(prof.ef1&&prof.ef1!=='-') formHtml+=`<tr><td style="padding:4px 0;color:var(--muted)">EFAPE-1</td><td style="text-align:right;font-weight:500">${prof.ef1}</td></tr>`;
+  if(prof.ef2&&prof.ef2!=='-') formHtml+=`<tr><td style="padding:4px 0;color:var(--muted)">EFAPE-2</td><td style="text-align:right;font-weight:500">${prof.ef2}</td></tr>`;
+  formHtml+='</tbody></table>';
+  document.getElementById('formacoes-box').innerHTML=formHtml;
+  
+  const firstName=prof.nome.split(' ')[0].toUpperCase();
+  const horario=HORARIO_GERAL[firstName]||{};
+  const plans=planejamentos.filter(p=>p.profId===profId);
+  
+  let html=`<div style="font-weight:600;font-size:14px;margin-bottom:1rem">${prof.nome}</div><div class="agenda-wrap">`;
+  DIAS_FULL.forEach((dia,i)=>{
+    const short=DIAS_SHORT[i];
+    const aulas=horario[short]||[];
+    const plansDia=plans.filter(p=>{const d=new Date(p.data);return d.getDay()-1===i;});
+    const multDay=prof.mult?prof.mult.split(' ')[0]:'';
+    const ef1Day=prof.ef1&&prof.ef1!=='-'?prof.ef1.split(' ')[0]:'';
+    const ef2Day=prof.ef2&&prof.ef2!=='-'?prof.ef2.split(' ')[0]:'';
+    const hasForm=multDay===dia||ef1Day===dia||ef2Day===dia;
+    if(!aulas.length&&!plansDia.length&&!hasForm) return;
+    html+=`<div class="agenda-day"><div class="agenda-day-label"><span class="day-name">${dia}</span><span style="font-size:11px">${short}</span></div><div class="agenda-events">`;
+    aulas.forEach(a=>html+=`<div class="agenda-event aula"><i class="ti ti-book" style="font-size:13px" aria-hidden="true"></i>${a}</div>`);
+    plansDia.forEach(p=>html+=`<div class="agenda-event"><i class="ti ti-calendar-plus" style="font-size:13px" aria-hidden="true"></i>Aula ${p.aula} <span class="mat-tag">${p.material}</span></div>`);
+    if(multDay===dia) html+=`<div class="agenda-event formacao"><i class="ti ti-school" style="font-size:13px" aria-hidden="true"></i>MULTIPICA: ${prof.mult.replace(dia,'').trim()}</div>`;
+    if(ef1Day===dia) html+=`<div class="agenda-event formacao"><i class="ti ti-school" style="font-size:13px" aria-hidden="true"></i>EFAPE-1: ${prof.ef1.replace(dia,'').trim()}</div>`;
+    if(ef2Day===dia) html+=`<div class="agenda-event formacao"><i class="ti ti-school" style="font-size:13px" aria-hidden="true"></i>EFAPE-2: ${prof.ef2.replace(dia,'').trim()}</div>`;
+    html+='</div></div>';
+  });
+  html+='</div>';
+  document.getElementById('agenda-content').innerHTML=html;
+}
+
+function copyICS(){const inp=document.getElementById('ics-link');inp.select();document.execCommand('copy');alert('Link copiado! Cole no Teams em Calendário → Inscrever-se via Web.');}
+
+/* ============================================================
+   LANÇAMENTO
+============================================================ */
+function setupLancamento(){
+  const hdr=document.getElementById('my-header-lancamento');
+  const pg=document.getElementById('lanc-prof-group');
+  if(isAdmin()){
+    hdr.innerHTML='';
+    pg.innerHTML=`<label>Professor</label><select id="lanc-prof">${professores.filter(p=>p.totalAulas>0).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('')}</select>`;
+  } else {
+    const pid=myProfId();
+    const prof=professores.find(p=>p.id===pid);
+    if(!pid){hdr.innerHTML='<div class="empty"><i class="ti ti-alert-circle"></i>Acesso não vinculado ainda.</div>';pg.innerHTML='';renderLancamentos();return;}
+    hdr.innerHTML=`<div class="my-header" style="margin-bottom:1.5rem"><h2>${prof?prof.nome:'Professor'}</h2><p>${prof?prof.disciplina:''}</p></div>`;
+    pg.innerHTML=`<input type="hidden" id="lanc-prof" value="${pid}"><label>Professor</label><input readonly value="${prof?prof.nome:''}">`;
+  }
+  const dateEl=document.getElementById('lanc-data');
+  if(!dateEl.value) dateEl.value=new Date().toISOString().split('T')[0];
+  renderLancamentos();
+}
+
+function registrarLancamento(){
+  const profId=document.getElementById('lanc-prof').value;
+  const data=document.getElementById('lanc-data').value;
+  const turma=document.getElementById('lanc-turma').value;
+  const aulaNum=parseInt(document.getElementById('lanc-aula-num').value);
+  const aulaTotal=parseInt(document.getElementById('lanc-aula-total').value);
+  const material=document.getElementById('lanc-material').value;
+  const obs=document.getElementById('lanc-obs').value;
+  if(!profId||!data||!aulaNum||!aulaTotal){alert('Preencha todos os campos obrigatórios.');return;}
+  lancamentos.unshift({profId:parseInt(profId),data,turma,aulaNum,aulaTotal,material,obs,ts:Date.now()});
+  const prof=professores.find(p=>p.id==profId);
+  if(prof){
+    prof.aulasMinistradas=Math.max(prof.aulasMinistradas,aulaNum);
+    prof.ultimaEntrega=new Date(data).toLocaleDateString('pt-BR');
+    const esperado=Math.round(prof.totalAulas*0.6),diff=esperado-aulaNum;
+    prof.status=diff<=0?'green':diff<=3?'yellow':'red';
+  }
+  save();renderLancamentos();
+  alert('Lançamento registrado com sucesso!');
+  document.getElementById('lanc-aula-num').value='';
+  document.getElementById('lanc-obs').value='';
+}
+
+function renderLancamentos(){
+  const tbody=document.getElementById('tbody-lancamentos');
+  if(!tbody) return;
+  let items=lancamentos;
+  if(!isAdmin()){const pid=myProfId();if(pid) items=items.filter(l=>l.profId===pid);}
+  if(!items.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Nenhum lançamento ainda</td></tr>';return;}
+  tbody.innerHTML=items.slice(0,30).map(l=>{
+    const p=professores.find(x=>x.id===l.profId);
+    return `<tr>
+      <td style="font-size:12px;font-family:var(--mono)">${new Date(l.data).toLocaleDateString('pt-BR')}</td>
+      <td style="font-size:12px">${p?p.nome.split(' ')[0]+' '+p.nome.split(' ').slice(-1)[0]:'—'}</td>
+      <td style="font-size:12px">${l.turma}</td>
+      <td><span class="aula-chip registered">${l.aulaNum}/${l.aulaTotal}</span></td>
+      <td><span class="mat-tag">${l.material}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============================================================
+   MODALS
+============================================================ */
+
+/* ============================================================
+   ALTERAR PIN
+============================================================ */
+function doChangePin(){
+  const pinAtual = ['cp0','cp1','cp2','cp3'].map(id=>document.getElementById(id).value).join('');
+  const pinNovo  = ['np0','np1','np2','np3'].map(id=>document.getElementById(id).value).join('');
+  const pinConf  = ['np4','np5','np6','np7'].map(id=>document.getElementById(id).value).join('');
+  const err = document.getElementById('pin-change-err');
+  
+  function showPinErr(msg){err.textContent=msg;err.style.display='block';err.style.background='var(--red-light)';err.style.color='var(--red-text)';err.style.border='1px solid #f0a0a0';}
+  err.style.display='none';
+  
+  if(pinAtual.length<4){showPinErr('Informe o PIN atual completo (4 dígitos).');return;}
+  if(pinNovo.length<4){showPinErr('O novo PIN deve ter 4 dígitos.');return;}
+  if(pinNovo!==pinConf){showPinErr('Os PINs novos não coincidem.');return;}
+  if(pinNovo===pinAtual){showPinErr('O novo PIN deve ser diferente do atual.');return;}
+  
+  // verify current PIN
+  if(currentUser.pin!==pinAtual){showPinErr('PIN atual incorreto.');['cp0','cp1','cp2','cp3'].forEach(id=>document.getElementById(id).value='');document.getElementById('cp0').focus();return;}
+  
+  // update PIN
+  currentUser.pin = pinNovo;
+  
+  // persist: admin accounts are stored in ADMIN_ACCOUNTS_MUTABLE, users in usuarios
+  const adminIdx = ADMIN_ACCOUNTS_MUTABLE.findIndex(a=>a.cpf===currentUser.cpf);
+  if(adminIdx>=0){
+    ADMIN_ACCOUNTS_MUTABLE[adminIdx].pin = pinNovo;
+    LS.set('admin_pins_v2', ADMIN_ACCOUNTS_MUTABLE.map(a=>({cpf:a.cpf,pin:a.pin})));
+  } else {
+    const u = usuarios.find(x=>x.cpf===currentUser.cpf);
+    if(u){ u.pin=pinNovo; save(); }
+  }
+  
+  err.textContent='PIN alterado com sucesso!';err.style.display='block';err.style.background='var(--green-light)';err.style.color='var(--green-text)';err.style.border='1px solid #a0d0b0';
+  ['cp0','cp1','cp2','cp3','np0','np1','np2','np3','np4','np5','np6','np7'].forEach(id=>document.getElementById(id).value='');
+  setTimeout(()=>closeModal('modal-change-pin'),1500);
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll(".modal-overlay").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
+document.getElementById("ano-atual").textContent=new Date().getFullYear();;
+</script>
+
+<!-- MODAL ALTERAR PIN -->
+<div class="modal-overlay" id="modal-change-pin">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">Alterar PIN <button class="close-btn" onclick="closeModal('modal-change-pin')">×</button></div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1.5rem;line-height:1.6">Informe seu PIN atual e defina um novo PIN de 4 dígitos.</p>
+    <div class="login-err" id="pin-change-err"></div>
+    <div class="form-group" style="margin-bottom:1.25rem">
+      <label>PIN Atual</label>
+      <div class="pin-wrap" style="justify-content:flex-start">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="cp0" oninput="pinNext(this,'cp1',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="cp1" oninput="pinNext(this,'cp2',true)" onkeydown="pinBack(event,this,'cp0',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="cp2" oninput="pinNext(this,'cp3',true)" onkeydown="pinBack(event,this,'cp1',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="cp3" onkeydown="pinBack(event,this,'cp2',true)">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:.75rem">
+      <label>Novo PIN</label>
+      <div class="pin-wrap" style="justify-content:flex-start">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="np0" oninput="pinNext(this,'np1',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="np1" oninput="pinNext(this,'np2',true)" onkeydown="pinBack(event,this,'np0',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="np2" oninput="pinNext(this,'np3',true)" onkeydown="pinBack(event,this,'np1',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="np3" onkeydown="pinBack(event,this,'np2',true)">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:1.5rem">
+      <label>Confirmar Novo PIN</label>
+      <div class="pin-wrap" style="justify-content:flex-start">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="np4" oninput="pinNext(this,'np5',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="np5" oninput="pinNext(this,'np6',true)" onkeydown="pinBack(event,this,'np4',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="np6" oninput="pinNext(this,'np7',true)" onkeydown="pinBack(event,this,'np5',true)">
+        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="np7" onkeydown="pinBack(event,this,'np6',true)">
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-change-pin')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="doChangePin()"><i class="ti ti-check"></i> Salvar novo PIN</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
