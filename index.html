@@ -160,6 +160,13 @@ tr:last-child td{border-bottom:none}
 .alert-strip i{font-size:20px;color:#e6a817}
 .ics-box{background:var(--blue-light);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue-text);display:flex;align-items:center;gap:10px;margin-top:.75rem}
 .ics-box input{background:transparent;border:none;flex:1;font-size:12px;color:var(--blue-text);outline:none;font-family:var(--mono)}
+/* LOGO ESCOLA */
+.school-logo-img{width:80px;height:80px;border-radius:20px;object-fit:cover;box-shadow:0 4px 20px rgba(42,125,79,.25);margin:0 auto 1.25rem;display:block}
+.nav-logo-img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+.config-upload-area{border:2px dashed var(--border);border-radius:var(--card-radius);padding:2rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)}
+.config-upload-area:hover{border-color:var(--green);background:var(--green-light)}
+.config-upload-area i{font-size:32px;color:var(--muted);display:block;margin-bottom:.75rem}
+.config-preview{width:120px;height:120px;border-radius:16px;object-fit:cover;border:2px solid var(--border);margin:0 auto;display:block}
 /* VINCULAR PAGE */
 .cpf-card{background:var(--white);border:1px solid var(--border);border-radius:var(--card-radius);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem}
 .cpf-card.linked{border-left:3px solid var(--green)}
@@ -236,8 +243,10 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="login-right">
     <div class="school-hero">
-      <div class="hero-icon"><i class="ti ti-school"></i></div>
-      <h1>EE Coronel Horta</h1>
+      <div id="login-logo-wrap">
+        <div class="hero-icon" id="login-logo-default"><i class="ti ti-school"></i></div>
+      </div>
+      <h1 id="school-name-login">EE Coronel Horta</h1>
       <p>Sistema de Gestão de<br>Planejamento de Aulas — <span id="ano-atual"></span></p>
     </div>
     <div class="feature-card">
@@ -260,7 +269,7 @@ tr:last-child td{border-bottom:none}
 ======================================================== -->
 <div id="app-shell">
 <nav>
-  <div class="logo"><i class="ti ti-school"></i> EE Coronel Horta</div>
+  <div class="logo" id="nav-logo-wrap"><i class="ti ti-school" id="nav-logo-icon"></i> <span id="school-name-nav">EE Coronel Horta</span></div>
   <span class="subtitle" id="nav-subtitle">Gestão de Planejamento</span>
   <div class="nav-tabs" id="nav-tabs-container"></div>
   <div class="user-pill">
@@ -411,6 +420,79 @@ tr:last-child td{border-bottom:none}
 
   <!-- DETALHE: quem não entregou -->
   <div id="prazos-detail" style="margin-top:1.5rem"></div>
+</div>
+</div>
+
+
+<!-- CONFIGURAÇÕES (admin only) -->
+<div id="page-config" class="page">
+<div class="container" style="max-width:760px">
+  <div class="section-title"><i class="ti ti-settings"></i> Configurações da Escola</div>
+
+  <div class="grid-2" style="align-items:start;gap:1.5rem">
+
+    <!-- LOGO -->
+    <div class="card">
+      <div class="section-title" style="font-size:13px"><i class="ti ti-photo"></i> Logotipo da Escola</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">O logotipo aparece na tela de login e no menu do sistema. Formatos aceitos: PNG, JPG ou SVG.</p>
+
+      <div id="logo-preview-wrap" style="margin-bottom:1.25rem;text-align:center">
+        <div id="logo-preview-default" style="width:120px;height:120px;border-radius:16px;background:var(--green-light);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto">
+          <i class="ti ti-school" style="font-size:40px;color:var(--green)"></i>
+        </div>
+        <img id="logo-preview-img" class="config-preview" style="display:none" src="" alt="Logo">
+      </div>
+
+      <div class="config-upload-area" onclick="document.getElementById('logo-file-input').click()">
+        <i class="ti ti-upload"></i>
+        <p style="font-size:13px;color:var(--muted);margin:0">Clique para selecionar o logotipo</p>
+        <p style="font-size:11px;color:var(--muted);margin-top:4px">PNG, JPG ou SVG — máx. 2MB</p>
+      </div>
+      <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">
+
+      <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+        <button class="btn btn-primary btn-sm" onclick="salvarLogo()"><i class="ti ti-check"></i> Salvar logotipo</button>
+        <button class="btn btn-outline btn-sm" onclick="removerLogo()"><i class="ti ti-trash"></i> Remover</button>
+      </div>
+      <div id="logo-msg" style="display:none;margin-top:.75rem;padding:8px 12px;border-radius:8px;font-size:12px"></div>
+    </div>
+
+    <!-- NOME DA ESCOLA -->
+    <div class="card">
+      <div class="section-title" style="font-size:13px"><i class="ti ti-building-school"></i> Dados da Escola</div>
+      <div class="form-group" style="margin-bottom:1rem">
+        <label>Nome da Escola</label>
+        <input type="text" id="config-school-name" placeholder="Ex: EE Coronel Horta">
+      </div>
+      <div class="form-group" style="margin-bottom:1rem">
+        <label>Município</label>
+        <input type="text" id="config-city" placeholder="Ex: Lavrinhas — SP">
+      </div>
+      <div class="form-group" style="margin-bottom:1.5rem">
+        <label>Diretora</label>
+        <input type="text" id="config-directora" placeholder="Ex: Regina Celia Barbosa">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="salvarConfigEscola()"><i class="ti ti-check"></i> Salvar dados</button>
+      <div id="config-escola-msg" style="display:none;margin-top:.75rem;padding:8px 12px;border-radius:8px;font-size:12px"></div>
+    </div>
+
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="card" style="margin-top:1.5rem">
+    <div class="section-title" style="font-size:13px"><i class="ti ti-eye"></i> Prévia — como ficará na tela de login</div>
+    <div style="background:linear-gradient(135deg,#e8f5ee 0%,#f0f5e8 50%,#e8f0fb 100%);border-radius:var(--card-radius);padding:2rem;text-align:center">
+      <div id="config-preview-logo-wrap" style="margin-bottom:.75rem">
+        <div id="config-preview-default" style="width:60px;height:60px;border-radius:12px;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto">
+          <i class="ti ti-school" style="font-size:26px;color:#fff"></i>
+        </div>
+        <img id="config-preview-logo-img" style="display:none;width:60px;height:60px;border-radius:12px;object-fit:cover;margin:0 auto;display:none" src="" alt="">
+      </div>
+      <div id="config-preview-name" style="font-size:16px;font-weight:600;color:var(--green)">EE Coronel Horta</div>
+      <div id="config-preview-city" style="font-size:12px;color:var(--muted);margin-top:2px">Lavrinhas — SP</div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -574,6 +656,14 @@ function buildDisciplinaSelect(elId, profId, valorAtual){
   el.innerHTML = discs.map(d=>`<option value="${d}" ${d===(valorAtual||discs[0])?'selected':''}>${d}</option>`).join('');
 }
 /* ── FIREBASE SYNC ─────────────────────────────────────── */
+/* Firebase salva arrays como objetos {0:{},1:{}} — converter de volta para array */
+function toArray(val){
+  if(!val) return [];
+  if(Array.isArray(val)) return val.filter(x=>x!=null);
+  if(typeof val==='object') return Object.values(val).filter(x=>x!=null);
+  return [];
+}
+
 function fbSet(path, data){
   try{ db.ref(path).set(data); }catch(e){ console.warn('fbSet error',e); }
 }
@@ -591,18 +681,18 @@ function fbListen(){
     db.ref('lancamentos').once('value'),
     db.ref('usuarios').once('value'),
   ]).then(([ps,pls,ls,us])=>{
-    if(ps.val())  { professores   = ps.val();  LS.set('prof_v2',professores); }
-    if(pls.val()) { planejamentos = pls.val(); LS.set('plans_v2',planejamentos); }
-    if(ls.val())  { lancamentos   = ls.val();  LS.set('lancs_v2',lancamentos); }
-    if(us.val())  { usuarios      = us.val();  LS.set('usuarios_v2',usuarios); }
+    if(ps.val())  { professores   = toArray(ps.val());  LS.set('prof_v2',professores); }
+    if(pls.val()) { planejamentos = toArray(pls.val()); LS.set('plans_v2',planejamentos); }
+    if(ls.val())  { lancamentos   = toArray(ls.val());  LS.set('lancs_v2',lancamentos); }
+    if(us.val())  { usuarios      = toArray(us.val());  LS.set('usuarios_v2',usuarios); }
     if(currentUser) refreshCurrentPage();
   });
   // Continua ouvindo mudanças em tempo real
-  db.ref('professores').on('value',   s=>{ if(s.val()){ professores   = s.val(); LS.set('prof_v2',professores);   if(currentUser) refreshCurrentPage(); }});
-  db.ref('planejamentos').on('value', s=>{ if(s.val()){ planejamentos = s.val(); LS.set('plans_v2',planejamentos); if(currentUser) refreshCurrentPage(); }});
-  db.ref('lancamentos').on('value',   s=>{ if(s.val()){ lancamentos   = s.val(); LS.set('lancs_v2',lancamentos);   if(currentUser) refreshCurrentPage(); }});
-  db.ref('usuarios').on('value',      s=>{ if(s.val()){ usuarios      = s.val(); LS.set('usuarios_v2',usuarios);   }});
-  db.ref('prazos').on('value',        s=>{ if(s.val()){ prazos        = s.val(); LS.set('prazos_v1',prazos); }});
+  db.ref('professores').on('value',   s=>{ if(s.val()){ professores   = toArray(s.val()); LS.set('prof_v2',professores);   if(currentUser) refreshCurrentPage(); }});
+  db.ref('planejamentos').on('value', s=>{ if(s.val()){ planejamentos = toArray(s.val()); LS.set('plans_v2',planejamentos); if(currentUser) refreshCurrentPage(); }});
+  db.ref('lancamentos').on('value',   s=>{ if(s.val()){ lancamentos   = toArray(s.val()); LS.set('lancs_v2',lancamentos);   if(currentUser) refreshCurrentPage(); }});
+  db.ref('usuarios').on('value',      s=>{ if(s.val()){ usuarios      = toArray(s.val()); LS.set('usuarios_v2',usuarios);   }});
+  db.ref('prazos').on('value',        s=>{ if(s.val()){ prazos        = toArray(s.val()); LS.set('prazos_v1',prazos); }});
 }
 function refreshCurrentPage(){
   const active = document.querySelector('.nav-tab.active');
@@ -790,6 +880,7 @@ const NAV_ADMIN = [
   {id:'lancamento',icon:'ti-pencil',label:'Lançamento'},
   {id:'prazos',icon:'ti-clock-check',label:'Prazos',admin:true},
   {id:'novoano',icon:'ti-calendar-plus',label:'Novo Ano',admin:true},
+  {id:'config',icon:'ti-settings',label:'Configurações',admin:true},
 ];
 const NAV_PROF = [
   {id:'planejamento',icon:'ti-calendar-check',label:'Meu Planejamento'},
@@ -822,6 +913,7 @@ function activatePage(id){
   if(id==='lancamento') setupLancamento();
   if(id==='prazos') renderPrazos();
   if(id==='novoano') renderNovoAno();
+  if(id==='config') renderConfig();
 }
 
 /* ============================================================
@@ -1099,6 +1191,169 @@ function deletePrazo(idx){
 
 // Ao abrir modal novo prazo, limpar campos
 const _origOpenModal = openModal;
+
+
+/* ============================================================
+   CONFIGURAÇÕES DA ESCOLA
+============================================================ */
+let configEscola = LS.get('config_escola_v1', {
+  nome: 'EE Coronel Horta',
+  cidade: 'Lavrinhas — SP',
+  diretora: 'Regina Celia Barbosa',
+  logo: null
+});
+
+function saveConfigEscola(){
+  LS.set('config_escola_v1', configEscola);
+  try{ db.ref('configEscola').set({nome:configEscola.nome,cidade:configEscola.cidade,diretora:configEscola.diretora}); }catch(e){}
+  // Logo fica só no localStorage (é base64, muito grande pro Firebase)
+  aplicarConfigEscola();
+}
+
+function aplicarConfigEscola(){
+  // Nome
+  const nome = configEscola.nome || 'EE Coronel Horta';
+  const el1 = document.getElementById('school-name-login');
+  const el2 = document.getElementById('school-name-nav');
+  if(el1) el1.textContent = nome;
+  if(el2) el2.textContent = nome;
+  document.title = nome + ' — Gestão de Professores';
+
+  // Logo na tela de login
+  const defaultLogin = document.getElementById('login-logo-default');
+  const wrapLogin    = document.getElementById('login-logo-wrap');
+  if(configEscola.logo){
+    if(defaultLogin) defaultLogin.style.display='none';
+    let img = document.getElementById('login-logo-img');
+    if(!img){
+      img = document.createElement('img');
+      img.id='login-logo-img';
+      img.className='school-logo-img';
+      img.alt='Logo';
+      if(wrapLogin) wrapLogin.appendChild(img);
+    }
+    img.src = configEscola.logo;
+    img.style.display='block';
+  } else {
+    if(defaultLogin) defaultLogin.style.display='flex';
+    const img = document.getElementById('login-logo-img');
+    if(img) img.style.display='none';
+  }
+
+  // Logo no nav
+  const navIcon = document.getElementById('nav-logo-icon');
+  const navWrap = document.getElementById('nav-logo-wrap');
+  if(configEscola.logo){
+    if(navIcon) navIcon.style.display='none';
+    let navImg = document.getElementById('nav-logo-img');
+    if(!navImg){
+      navImg = document.createElement('img');
+      navImg.id='nav-logo-img';
+      navImg.className='nav-logo-img';
+      navImg.alt='Logo';
+      if(navWrap) navWrap.insertBefore(navImg, navWrap.firstChild);
+    }
+    navImg.src = configEscola.logo;
+    navImg.style.display='inline-block';
+  } else {
+    if(navIcon) navIcon.style.display='';
+    const navImg = document.getElementById('nav-logo-img');
+    if(navImg) navImg.style.display='none';
+  }
+}
+
+function renderConfig(){
+  if(!isAdmin()) return;
+  // Preencher campos
+  document.getElementById('config-school-name').value = configEscola.nome||'';
+  document.getElementById('config-city').value         = configEscola.cidade||'';
+  document.getElementById('config-directora').value    = configEscola.diretora||'';
+  // Preview logo
+  atualizarPreviewConfig();
+}
+
+function handleLogoUpload(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 2*1024*1024){ alert('Arquivo muito grande. Use uma imagem de até 2MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const base64 = e.target.result;
+    configEscola.logo = base64;
+    // Mostrar preview
+    const imgEl = document.getElementById('logo-preview-img');
+    const defEl = document.getElementById('logo-preview-default');
+    imgEl.src = base64; imgEl.style.display='block'; defEl.style.display='none';
+    atualizarPreviewConfig();
+  };
+  reader.readAsDataURL(file);
+}
+
+function atualizarPreviewConfig(){
+  const nome   = document.getElementById('config-school-name')?document.getElementById('config-school-name').value:'';
+  const cidade = document.getElementById('config-city')?document.getElementById('config-city').value:'';
+  const pName  = document.getElementById('config-preview-name');
+  const pCity  = document.getElementById('config-preview-city');
+  if(pName) pName.textContent = nome || 'EE Coronel Horta';
+  if(pCity) pCity.textContent = cidade || 'Lavrinhas — SP';
+
+  const pDef = document.getElementById('config-preview-default');
+  const pImg = document.getElementById('config-preview-logo-img');
+  if(configEscola.logo){
+    if(pDef) pDef.style.display='none';
+    if(pImg){ pImg.src=configEscola.logo; pImg.style.display='block'; }
+  } else {
+    if(pDef) pDef.style.display='flex';
+    if(pImg) pImg.style.display='none';
+  }
+}
+
+function salvarLogo(){
+  const msg = document.getElementById('logo-msg');
+  saveConfigEscola();
+  msg.style.display='block';
+  msg.style.background='var(--green-light)';msg.style.color='var(--green-text)';msg.style.border='1px solid #a0d0b0';
+  msg.textContent='✅ Logotipo salvo com sucesso!';
+  setTimeout(()=>msg.style.display='none',2500);
+}
+
+function removerLogo(){
+  if(!confirm('Remover o logotipo?')) return;
+  configEscola.logo = null;
+  const imgEl = document.getElementById('logo-preview-img');
+  const defEl = document.getElementById('logo-preview-default');
+  if(imgEl){ imgEl.style.display='none'; imgEl.src=''; }
+  if(defEl) defEl.style.display='flex';
+  document.getElementById('logo-file-input').value='';
+  saveConfigEscola();
+  atualizarPreviewConfig();
+}
+
+function salvarConfigEscola(){
+  const msg = document.getElementById('config-escola-msg');
+  configEscola.nome     = document.getElementById('config-school-name').value.trim()||'EE Coronel Horta';
+  configEscola.cidade   = document.getElementById('config-city').value.trim();
+  configEscola.diretora = document.getElementById('config-directora').value.trim();
+  saveConfigEscola();
+  atualizarPreviewConfig();
+  msg.style.display='block';
+  msg.style.background='var(--green-light)';msg.style.color='var(--green-text)';msg.style.border='1px solid #a0d0b0';
+  msg.textContent='✅ Dados salvos com sucesso!';
+  setTimeout(()=>msg.style.display='none',2500);
+}
+
+// Sincronizar config do Firebase ao iniciar
+try{
+  db.ref('configEscola').once('value').then(s=>{
+    if(s.val()){
+      configEscola.nome     = s.val().nome     || configEscola.nome;
+      configEscola.cidade   = s.val().cidade   || configEscola.cidade;
+      configEscola.diretora = s.val().diretora || configEscola.diretora;
+      LS.set('config_escola_v1', configEscola);
+    }
+    aplicarConfigEscola();
+  });
+}catch(e){ aplicarConfigEscola(); }
 
 /* ============================================================
    NOVO ANO LETIVO (admin only)
@@ -1638,6 +1893,9 @@ document.getElementById("ano-atual").textContent=new Date().getFullYear();
 
 // Iniciar sincronização em tempo real com Firebase
 fbListen();
+
+// Aplicar configurações salvas
+setTimeout(aplicarConfigEscola, 200);
 </script>
 
 <!-- MODAL ALTERAR PIN -->
